@@ -69,17 +69,24 @@ def main():
     # box_solve_problem(m)
     # # solve(m, debug=True)
 
-    optimize(m, water_recovery=0.35, heat_price=0.005, objective="LCOW")
+    optimize(m, 
+            water_recovery=0.35, 
+            heat_price=0.01, 
+            grid_frac_heat=0.899999)
     solve(m, debug=True)
-    # display_system_stream_table(m)
-    # report_LTMED(m)
-    # report_pump(m, m.fs.treatment.pump)
-    report_fpc(m)
 
-    m.fs.costing.LCOW.display()
-    m.fs.energy.costing.LCOH.display()
-    m.fs.costing.LCOT.display()
-    # display_costing_breakdown(m)
+    # optimize(m, water_recovery=0.35, heat_price=0.005, objective="LCOT")
+    # solve(m, debug=True)
+    # display_system_stream_table(m)
+    report_LTMED(m)
+    # # report_pump(m, m.fs.treatment.pump)
+    report_fpc(m)
+    print(m.fs.costing.frac_heat_from_grid.display())
+
+    # m.fs.costing.LCOW.display()
+    # m.fs.energy.costing.LCOH.display()
+    # m.fs.costing.LCOT.display()
+    # # display_costing_breakdown(m)
 
     return m
 
@@ -88,6 +95,7 @@ def build_sweep(
     grid_frac_heat=None,
     heat_price=None,
     water_recovery=None,
+    objective="LCOW"
 ):
     m = build_system(RE=True)
     add_connections(m)
@@ -97,13 +105,12 @@ def build_sweep(
     init_system(m)
     add_costing(m)
     scale_costing(m)
-    box_solve_problem(m)
     optimize(
         m,
         water_recovery=water_recovery,
         grid_frac_heat=grid_frac_heat,
         heat_price=heat_price,
-        objective="LCOW",
+        objective=objective,
     )
 
     return m
@@ -302,7 +309,6 @@ def add_treatment_costing(m):
 def add_energy_costing(m):
     energy = m.fs.energy
     energy.costing = EnergyCosting()
-
     add_fpc_costing(m, energy.costing)
 
     energy.costing.cost_process()
@@ -344,11 +350,12 @@ def scale_costing(m):
     energy = m.fs.energy
     # TBD
 
-    print(m.fs.costing.display())
+    add_fpc_costing_scaling(m, energy.costing)
+    # print(m.fs.costing.display())
 
     # iscale.set_scaling_factor(m.fs.costing.aggregate_flow_electricity_sold, 0)
     # iscale.set_scaling_factor(m.fs.costing.aggregate_flow_heat_sold, 0)
-    # iscale.set_scaling_factor(m.fs.costing.aggregate_flow_heat_purchased, 1e-6)
+    iscale.set_scaling_factor(m.fs.costing.aggregate_flow_electricity_purchased, 1e4)
 
     # iscale.constraint_scaling_transform(m.fs.costing.aggregate_electricity_balance, 0)
     # iscale.constraint_scaling_transform(m.fs.costing.aggregate_heat_balance, 0)
@@ -381,6 +388,7 @@ def apply_scaling(m):
     add_UF_scaling(m.fs.treatment.UF)
     add_LTMED_scaling(m, m.fs.treatment.LTMED)
     add_FPC_scaling(m, m.fs.energy.FPC)
+    add_DWI_scaling(m, m.fs.treatment.DWI)
     apply_system_scaling(m)
     iscale.calculate_scaling_factors(m)
 
@@ -617,16 +625,29 @@ def optimize(
         print(f"\n------- Fixed Recovery at {100*water_recovery}% -------")
         m.fs.treatment.LTMED.unit.recovery_vol_phase[0.0, "Liq"].unfix()
         m.fs.water_recovery.fix(water_recovery)
+    else:
+        lower_bound = 0.1
+        upper_bound = 0.49
+        print(f"\n------- Unfixed Recovery -------")
+        print(f"Lower Bound: {lower_bound}")
+        print(f"Upper Bound: {upper_bound}")
+        m.fs.treatment.LTMED.unit.recovery_vol_phase[0.0, "Liq"].unfix()
+        m.fs.water_recovery.unfix()
+        m.fs.water_recovery.setlb(lower_bound)
+        m.fs.water_recovery.setub(upper_bound)
 
-    if grid_frac_heat is not None:
-        m.fs.energy.FPC.heat_load.unfix()
-        m.fs.costing.frac_heat_from_grid.fix(grid_frac_heat)
 
     if heat_price is not None:
         energy.FPC.heat_load.unfix()
         energy.FPC.hours_storage.unfix()
         m.fs.costing.frac_heat_from_grid.unfix()
         m.fs.costing.heat_cost_buy.fix(heat_price)
+
+#BUG This is an issue
+    if grid_frac_heat is not None:
+        energy.FPC.heat_load.unfix()
+        energy.FPC.hours_storage.fix(24)
+        m.fs.costing.frac_heat_from_grid.fix(grid_frac_heat)
 
     print(f"Degrees of Feedom: {degrees_of_freedom(m)}")
     assert degrees_of_freedom(m) >= 0

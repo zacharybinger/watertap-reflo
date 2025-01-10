@@ -211,9 +211,11 @@ def set_scaling(m, blk):
 def add_ec_scaling(m, blk):
     set_scaling_factor(blk.ec.charge_loading_rate, 1e1)
     set_scaling_factor(blk.ec.electrode_volume, 1)
+    set_scaling_factor(blk.ec.reactor_volume, 3)
+    set_scaling_factor(blk.ec.floc_basin_vol, 1e3)
     # set_scaling_factor(blk.ec.cell_voltage, )
     # set_scaling_factor(blk.ec.applied_current, 1e5)
-    # set_scaling_factor(blk.ec.power_required, 1e-6)
+    set_scaling_factor(blk.ec.power_required, 1e6)
 
     constraint_scaling_transform(blk.ec.eq_power_required, 1e-4)
     set_scaling_factor(blk.ec.properties_in[0.0].flow_mass_comp["H2O"], 1e1)

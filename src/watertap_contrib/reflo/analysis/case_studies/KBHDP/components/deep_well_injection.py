@@ -53,6 +53,7 @@ __all__ = [
     "init_DWI",
     "set_DWI_op_conditions",
     "add_DWI_costing",
+    "add_DWI_scaling",
     "report_DWI",
     "print_DWI_costing_breakdown",
 ]
@@ -142,6 +143,18 @@ def add_DWI_costing(m, blk, costing_blk=None):
             "cost_method": "as_opex"
         },  # could be "as_capex" or "blm"
     )
+
+def add_DWI_scaling(m, blk):
+    set_scaling_factor(blk.unit.properties[0.0].mass_frac_phase_comp['Liq','H2O'], 1e-0)
+    set_scaling_factor(blk.unit.properties[0.0].mass_frac_phase_comp['Liq','TDS'], 1e-2)
+    set_scaling_factor(blk.unit.properties[0.0].dens_mass_phase['Liq'], 1e3)
+    
+    # set_scaling_factor(blk.feed.properties[0.0].mass_frac_phase_comp['Liq','H2O'], 1e-1)
+    # set_scaling_factor(blk.feed.properties[0.0].mass_frac_phase_comp['Liq','TDS'], 1e-2)
+
+    # constraint_scaling_transform(blk.feed.properties[0].eq_conc_mass_phase_comp, 1e-1)
+    # constraint_scaling_transform(blk.feed.properties[0.0].eq_conc_mass_phase_comp, 1)
+    # set_scaling_factor(blk.feed.properties[0.0].dens_mass_phase['Liq'], 1e3)
 
 
 def report_DWI(blk):

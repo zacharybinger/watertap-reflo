@@ -41,6 +41,7 @@ __all__ = [
     "set_fpc_op_conditions",
     "add_fpc_costing",
     "add_FPC_scaling",
+    "add_fpc_costing_scaling",
     "report_fpc",
     "print_FPC_costing_breakdown",
 ]
@@ -129,13 +130,17 @@ def add_fpc_costing(m, costing_block=None):
 
 
 def add_FPC_scaling(m, blk):
-    set_scaling_factor(blk.heat_annual_scaled, 1e2)
+    set_scaling_factor(blk.heat_annual_scaled, 1e3)
     set_scaling_factor(blk.electricity_annual_scaled, 1e2)
     set_scaling_factor(blk.heat_load, 1e6)
 
     constraint_scaling_transform(blk.heat_constraint, 1e-3)
     constraint_scaling_transform(blk.electricity_constraint, 1e-4)
 
+def add_fpc_costing_scaling(m, blk):
+    set_scaling_factor(blk.yearly_heat_production, 1e7)
+    set_scaling_factor(blk.lifetime_heat_production, 1e8)
+    set_scaling_factor(blk.aggregate_flow_heat, 1e3)
 
 def breakdown_dof(blk):
     equalities = [c for c in activated_equalities_generator(blk)]

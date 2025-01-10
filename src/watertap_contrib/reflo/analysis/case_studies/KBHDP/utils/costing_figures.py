@@ -37,7 +37,7 @@ def import_data(data_manager):
     import_keys = [
             {
                 "filekey": "fs.costing.frac_heat_from_grid",
-                "return_key": "Grid Frac Heat",
+                "return_key": "Grid Heat Fraction",
                 # "units": "%",
             },
             {
@@ -52,12 +52,12 @@ def import_data(data_manager):
             },
             {
                 "filekey": "fs.costing.heat_cost_buy",
-                "return_key": "fs.costing.heat_cost_buy",
+                "return_key": "Heat Cost",
                 # "units": "USD/kWh",
             },
             {
                 "filekey": "fs.energy.costing.flat_plate.cost_per_area_collector",
-                "return_key": "fs.energy.costing.flat_plate.cost_per_area_collector",
+                "return_key": "FPC Cost Per Area",
                 # "units": "USD/kWh",
             },
             {
@@ -72,7 +72,7 @@ def import_data(data_manager):
             },
             {
                 "filekey": "fs.energy.costing.flat_plate.fixed_operating_by_capacity",
-                "return_key": "FPC Cost",
+                "return_key": "FPC Opex By Capacity",
                 "units": "USD/a/kW",
             },
             {
@@ -134,6 +134,11 @@ def import_data(data_manager):
                 "filekey": "fs.treatment.costing.co2.cost",
                 "return_key": "CO2 Cost",
                 # "units": "USD/m**3",
+            },
+            {
+                "filekey": "fs.energy.costing.flat_plate.cost_per_volume_storage",
+                "return_key": "Storage Cost",
+                # "units": "USD/m**3",
             }
         ]
 
@@ -164,7 +169,6 @@ def create_sweep_cost_breakdown(
     print(costing_data.directory_keys)
     print(costing_data.data_keys)
     x_var = costing_data.directory_keys[0].split('/')[-1]
-
 
     """ define the base costing block and flow (This is used to normalize LCOW)
     the costing block is used to pull out default values for cost of 
@@ -289,7 +293,7 @@ def create_map_figure(
     z_data=None,
     x_units="",
     y_units="",
-    save=True,
+    save=False,
     show=False,
     save_name=None,
     xticks=None,
@@ -413,15 +417,15 @@ def create_map_figure(
 
 
 def create_all_figures():
-    create_case_figures(
-        case_name="KBHDP_SOA_1", device_groups=figure_device_groups["KBHDP_SOA_1"]
-    )
+    # create_case_figures(
+    #     case_name="KBHDP_SOA_1", device_groups=figure_device_groups["KBHDP_SOA_1"]
+    # )
     # create_case_figures(
     #     case_name="KBHDP_RPT_1", device_groups=figure_device_groups["KBHDP_RPT_1"]
     # )
-    # create_case_figures(
-    #     case_name="KBHDP_RPT_2", device_groups=figure_device_groups["KBHDP_RPT_2"]
-    # )
+    create_case_figures(
+        case_name="KBHDP_RPT_2", device_groups=figure_device_groups["KBHDP_RPT_2"]
+    )
 
 
 if __name__ == "__main__":

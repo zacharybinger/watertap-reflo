@@ -48,13 +48,19 @@ def run_case_sweep(case, case_name=None, yaml_file=None):
         number_of_subprocesses=1,
     )
 
+    print(f"\n\n{f'Parameter':<40}{'Value':<10}{'Result':<10}")
+    for item in lT.ps.model_manager.ps.writer.parallel_manager.results.results['sweep_params'].items():
+        for idx, value in enumerate(item[1]['value']):
+            result = lT.ps.model_manager.ps.writer.parallel_manager.results.results['solve_successful'][idx]
+            print(f"{f'{item[0]}':<40}{value:<10.2f}{result}")
+
 
 def run_all_cases():
     cases = [
-        {"case": SOA, "case_name": "KBHDP_SOA_1", "yaml_file": "KBHDP_SOA_1.yaml"},
+        # {"case": SOA, "case_name": "KBHDP_SOA_1", "yaml_file": "KBHDP_SOA_1.yaml"},
         # {"case": SOA, "case_name": "KBHDP_SOA_1", "yaml_file": "KBHDP_SOA_1_diff.yaml"},
         # {"case": RPT1, "case_name": "KBHDP_RPT_1", "yaml_file": "KBHDP_RPT_1.yaml"},
-        # {"case": RPT2, "case_name": "KBHDP_RPT_2", "yaml_file": "KBHDP_RPT_2.yaml"},
+        {"case": RPT2, "case_name": "KBHDP_RPT_2", "yaml_file": "KBHDP_RPT_2.yaml"},
     ]
 
     for case in cases:
