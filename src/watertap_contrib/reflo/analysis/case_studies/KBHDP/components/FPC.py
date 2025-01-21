@@ -52,7 +52,9 @@ param_file = os.path.join(parent_dir, "swh-kbhdp.json")
 dataset_filename = os.path.join(parent_dir, "data/FPC_KBHDP_el_paso.pkl")
 surrogate_filename = os.path.join(
     parent_dir,
-    "data/FPC_KBHDP_el_paso_heat_load_1_25_hours_storage_0_12_temperature_hot_50_102.json",
+    # "data/FPC_KBHDP_el_paso_MID_heat_load_1-25_hours_storage_0-24_temperature_hot_50-100.json")
+    # "data/FPC_KBHDP_el_paso_HIGH_heat_load_1-50_hours_storage_0-24_temperature_hot_50-100.json"
+    "data/FPC_KBHDP_el_paso_REALLY_HIGH_heat_load_1-100_hours_storage_0-24_temperature_hot_50-100.json"
 )
 
 
@@ -75,7 +77,7 @@ def build_fpc(m):
     print(f'\n{"=======> BUILDING FPC SYSTEM <=======":^60}\n')
 
     input_bounds = dict(
-        heat_load=[1, 25], hours_storage=[0, 12], temperature_hot=[50, 102]
+        heat_load=[1, 100], hours_storage=[0, 24], temperature_hot=[50, 102]
     )
     input_units = dict(heat_load="MW", hours_storage="hour", temperature_hot="degK")
     input_variables = {
@@ -107,7 +109,7 @@ def set_system_op_conditions(m):
     m.fs.system_capacity.fix()
 
 
-def set_fpc_op_conditions(m, hours_storage=6, temperature_hot=80):
+def set_fpc_op_conditions(m, hours_storage=12, temperature_hot=80):
     energy = m.fs.energy
     # energy.FPC.load_surrogate()
 
@@ -116,7 +118,7 @@ def set_fpc_op_conditions(m, hours_storage=6, temperature_hot=80):
     energy.FPC.temperature_hot.fix(temperature_hot)
     # Assumes the cold temperature from the outlet temperature of a 'MD HX'
     energy.FPC.temperature_cold.set_value(20)
-    energy.FPC.heat_load.fix(10)
+    energy.FPC.heat_load.fix(99)
 
 
 def add_fpc_costing(m, costing_block=None):
@@ -133,13 +135,14 @@ def add_FPC_scaling(m, blk):
     set_scaling_factor(blk.heat_annual_scaled, 1e3)
     set_scaling_factor(blk.electricity_annual_scaled, 1e2)
     set_scaling_factor(blk.heat_load, 1e6)
+    set_scaling_factor(blk.hours_storage, 1/10)
 
     constraint_scaling_transform(blk.heat_constraint, 1e-3)
     constraint_scaling_transform(blk.electricity_constraint, 1e-4)
 
 def add_fpc_costing_scaling(m, blk):
-    set_scaling_factor(blk.yearly_heat_production, 1e7)
-    set_scaling_factor(blk.lifetime_heat_production, 1e8)
+    set_scaling_factor(blk.yearly_heat_production, 1e-8)
+    set_scaling_factor(blk.lifetime_heat_production, 1e-9)
     set_scaling_factor(blk.aggregate_flow_heat, 1e3)
 
 def breakdown_dof(blk):
@@ -194,7 +197,9 @@ def report_fpc(m):
     print(
         f'{"Storage volume":<30s}{value(blk.storage_volume):<20,.2f}{pyunits.get_units(blk.storage_volume)}'
     )
-
+    print(
+        f'{"Hours of Storage":<30s}{value(blk.hours_storage):<20,.2f}{pyunits.get_units(blk.hours_storage)}'
+    )
     print(
         f'{"Heat load":<30s}{value(blk.heat_load):<20,.2f}{pyunits.get_units(blk.heat_load)}'
     )
@@ -317,3 +322,4 @@ if __name__ == "__main__":
 
     add_fpc_costing(m)
     results = solve(m)
+    report_fpc(m)

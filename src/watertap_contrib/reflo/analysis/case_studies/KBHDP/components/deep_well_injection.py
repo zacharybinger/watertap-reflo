@@ -130,6 +130,8 @@ def init_DWI(m, blk, verbose=True, solver=None):
 
     optarg = solver.options
     # assert_no_degrees_of_freedom(m)
+    blk.feed.initialize(optarg=optarg, outlvl=idaeslogger.INFO)
+    propagate_state(blk.feed_to_unit)
     blk.unit.initialize(optarg=optarg, outlvl=idaeslogger.INFO)
 
 
@@ -145,12 +147,13 @@ def add_DWI_costing(m, blk, costing_blk=None):
     )
 
 def add_DWI_scaling(m, blk):
-    set_scaling_factor(blk.unit.properties[0.0].mass_frac_phase_comp['Liq','H2O'], 1e-0)
-    set_scaling_factor(blk.unit.properties[0.0].mass_frac_phase_comp['Liq','TDS'], 1e-2)
-    set_scaling_factor(blk.unit.properties[0.0].dens_mass_phase['Liq'], 1e3)
-    
-    # set_scaling_factor(blk.feed.properties[0.0].mass_frac_phase_comp['Liq','H2O'], 1e-1)
+    set_scaling_factor(blk.feed.properties[0.0].mass_frac_phase_comp['Liq','H2O'], 0.1)
     # set_scaling_factor(blk.feed.properties[0.0].mass_frac_phase_comp['Liq','TDS'], 1e-2)
+
+    set_scaling_factor(blk.unit.properties[0.0].mass_frac_phase_comp['Liq','H2O'], 0.1)
+    set_scaling_factor(blk.unit.properties[0.0].flow_vol_phase['Liq'], 1e-2)
+    # set_scaling_factor(blk.unit.properties[0.0].mass_frac_phase_comp['Liq','TDS'], 1e-2)
+    # set_scaling_factor(blk.unit.properties[0.0].dens_mass_phase['Liq'], 1e3)
 
     # constraint_scaling_transform(blk.feed.properties[0].eq_conc_mass_phase_comp, 1e-1)
     # constraint_scaling_transform(blk.feed.properties[0.0].eq_conc_mass_phase_comp, 1)
@@ -185,7 +188,7 @@ def build_system():
         "SiO2": 0.054,
         "Alkalinity_2-": 0.421,
     }
-
+    #BUG MCAS for RO flowsheets WaterParameterBlock for LTMED causing issues
     m.fs.properties = MCASParameterBlock(
         solute_list=inlet_conc.keys(), material_flow_basis=MaterialFlowBasis.mass
     )
@@ -262,8 +265,8 @@ if __name__ == "__main__":
     set_system_op_conditions(m.fs.DWI)
 
     init_DWI(m, m.fs.DWI)
-    add_DWI_costing(m, m.fs.DWI)
-    solve(m)
-    print_DWI_costing_breakdown(m.fs.DWI)
+    # add_DWI_costing(m, m.fs.DWI)
+    # solve(m)
+    # print_DWI_costing_breakdown(m.fs.DWI)
 
-    print(m.fs.DWI.display())
+    # print(m.fs.DWI.display())

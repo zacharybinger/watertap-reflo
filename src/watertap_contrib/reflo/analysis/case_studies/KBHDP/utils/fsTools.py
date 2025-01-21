@@ -29,9 +29,38 @@ def check_jac(m, print_extreme_jacobian_values=True):
         extreme_entries = iscale.extreme_jacobian_entries(
             m, jac=jac_scaled, nlp=nlp, zero=1e-20, large=100
         )
+        
+        # sorted_entries = sorted(extreme_entries, key=lambda x: x[2].name)
+        # print(sorted_entries)
+        # assert False
+        sorted_entries ={}
         for val, con, var in extreme_entries:
-            if val >= 100:
-                print(val, var.name, value(var), calc_scale(value(var)), iscale.get_scaling_factor(var))
+            var_tag = ('.'.join(var.name.split(".")[:3]))
+            if var_tag not in sorted_entries:
+                sorted_entries[var_tag] = []
+            sorted_entries[var_tag].append((val, con, var))
+            
+        header = f"{'Value':<10s}{'Variable':<55s}{'Value':<10s}{'Scale':<10s}{'Factor':<10s}"
+        print(header)
+        print("-" * len(header))
+        for key, content in sorted_entries.items():
+            print(f"{key}")
+            for val, con, var in content:
+                if val >= 100:
+                    var_tag_end = '.'.join(var.name.split(".")[3:])
+                    value_scale = calc_scale(value(var))
+                    current_scale = iscale.get_scaling_factor(var)
+                    if current_scale is None:
+                        current_scale = 0
+                    else:
+                        current_scale = math.log(current_scale, 10)
+                    print(f'  {f"{val:.0f}":<5s}{f"{var_tag_end}":<60s}{f"{value(var):<10.2f}"}{f"{value_scale:<10.1f}"}{f"{current_scale:<10.2f}"}')
+                    # print(val, '.'.join(var.name.split(".")[3:]), value(var), calc_scale(value(var)), iscale.get_scaling_factor(var))
+            # for v in val:
+            #     print(val, var.name, value(var), calc_scale(value(var)), iscale.get_scaling_factor(var))
+            # assert False
+        #     if val >= 100:
+        #         print(val, var.name, value(var), calc_scale(value(var)), iscale.get_scaling_factor(var))
         print("--------------------------")
         print("Extreme Jacobian columns:")
         extreme_cols = iscale.extreme_jacobian_columns(
@@ -52,9 +81,9 @@ def check_jac(m, print_extreme_jacobian_values=True):
 
 
 def calc_scale(value):
-    if value != 0 or value != None:
+    if value != 0 and value is not None:
         try:
-            return round(-1 * math.log(abs(value), 10), 1)
+            return round(math.log(abs(value), 10), 1)
         except:
             return 0
     else:
@@ -278,10 +307,11 @@ def standard_solve(
             assert_optimal_termination(results)
         if check_close_to_bounds:
             print("------vars_close_to_bound-tests---------")
-            print_variables_close_to_bounds(m)
+            print_close_to_bounds(m)
             print("------constraints_close_to_bound-tests---------")
-
             print_constraints_close_to_bounds(m)
+            print("------infeasible_bounds-tests---------")
+            print_infeasible_bounds(m)
         if check_var_scailing:
             print("------poor_scaling_vars-tests---------")
             get_poorly_scaled_vars(m)
@@ -296,8 +326,8 @@ def standard_solve(
             succes = "Optimal solution found!"
             print("--------------------------")
         except:
-            # print("------ifeasible_constraints-test---------")
-            # print_infeasible_constraints(m, tol=1e-8)
+            print("------ifeasible_constraints-test---------")
+            print_infeasible_constraints(m, print_expression=True, print_variables=False,)
             succes = "Solution NOT optimal !!!!!!!!!!!!!!"
             print("!-!-!-!-!-!-!-!-!-!-!-!-!")
         if m.find_component("fs.costing.LCOW") is not None:

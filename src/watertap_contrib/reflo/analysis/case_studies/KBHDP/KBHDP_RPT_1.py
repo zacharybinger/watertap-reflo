@@ -68,7 +68,7 @@ def main():
     # box_solve_problem(m)
     # solve(m, debug=True)
     # scale_costing(m)
-    optimize(m, ro_mem_area=20000, water_recovery=0.8, grid_frac=0.6, objective="LCOT")
+    optimize(m, ro_mem_area=None, water_recovery=0.8, grid_frac=0.99, objective="LCOT")
     solve(m, debug=True)
     # # display_flow_table(m)
     # display_system_stream_table(m)
@@ -85,6 +85,7 @@ def main():
     report_pump(m, m.fs.treatment.pump)
     print(m.fs.costing.frac_elec_from_grid.display())
     print(m.fs.costing.aggregate_flow_electricity_purchased.display())
+    # print(m.fs.costing.LCOT)
 
     return m
 
@@ -538,7 +539,7 @@ def init_treatment(m, verbose=True, solver=None):
 
     init_ro_system(m, treatment.RO)
     propagate_state(treatment.ro_to_product)
-    # propagate_state(treatment.ro_to_dwi)
+    propagate_state(treatment.ro_to_dwi)
 
     treatment.product.initialize(optarg=optarg)
     init_DWI(m, treatment.DWI)

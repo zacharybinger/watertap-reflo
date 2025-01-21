@@ -592,7 +592,7 @@ class REFLOSystemCostingData(WaterTAPCostingBlockData):
             # treatment block is consuming heat and energy block is generating it
             self.has_heat_flows = True
             self.frac_heat_from_grid = pyo.Var(
-                initialize=0,
+                initialize=0.5,
                 domain=pyo.NonNegativeReals,
                 bounds=(0, 1.00001),
                 doc="Fraction of heat from grid",
