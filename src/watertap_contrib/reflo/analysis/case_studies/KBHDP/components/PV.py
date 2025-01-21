@@ -109,6 +109,9 @@ def add_pv_costing(m, blk):
 
     energy.pv.costing = UnitModelCostingBlock(
         flowsheet_costing_block=energy.costing,
+        costing_method_arguments={
+            "cost_method": "detailed"
+        }
     )
 
 
@@ -121,7 +124,7 @@ def add_pv_scaling(m, blk):
     # iscale.set_scaling_factor(pv.annual_energy, 1)
     iscale.set_scaling_factor(pv.electricity, 1000)
     iscale.set_scaling_factor(pv.land_req, 100)
-    
+
 
 def add_pv_costing_scaling(m, blk):
 
@@ -130,6 +133,7 @@ def add_pv_costing_scaling(m, blk):
     iscale.set_scaling_factor(blk.lifetime_electricity_production, 1e8)
     iscale.set_scaling_factor(blk.aggregate_flow_electricity, 1e3)
     # iscale.constraint_scaling_transform(blk.lifetime_electricity_production_constraint, 1e2)
+
 
 def print_PV_costing_breakdown(pv):
     print(f"\n\n-------------------- PV Costing Breakdown --------------------\n")
@@ -290,14 +294,17 @@ if __name__ == "__main__":
     iscale.calculate_scaling_factors(m)
     initialize(m)
     solve(m, debug=True)
-    print(m.fs.energy.pv.display())
-
     print(
         f"{f'Design Size (W):':<30s}{value(pyunits.convert(m.fs.energy.pv.design_size, to_units=pyunits.watt)):<10,.1f}"
     )
-    print(
-        f"{f'Direct Cost Per Watt ($/W):':<30s}{value(m.fs.energy.costing.pv_surrogate.cost_per_watt_module):<10,.1f}"
-    )
+    if m.fs.energy.pv.costing.cost_method == "simple":
+        print(
+            f"{f'Cost Per Watt ($/W):':<30s}{value(m.fs.energy.costing.pv_surrogate.cost_per_watt_installed):<10,.1f}"
+        )
+    else:
+        print(
+            f"{f'Cost Per Watt Module ($/W):':<30s}{value(m.fs.energy.costing.pv_surrogate.cost_per_watt_module):<10,.1f}"
+        )
     # print(f"{f'Direct Cost Should Be ($):':<30s}{value(pyunits.convert(m.fs.energy.pv.design_size, to_units=pyunits.watt))*value(m.fs.energy.costing.pv_surrogate.cost_per_watt_module):<10,.1f}")
     print(
         f"{f'Direct Cost Currently Is ($):':<30s}{value(m.fs.energy.pv.costing.capital_cost):<10,.1f}"
