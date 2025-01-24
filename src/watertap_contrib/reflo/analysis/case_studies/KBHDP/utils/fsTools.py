@@ -29,17 +29,17 @@ def check_jac(m, print_extreme_jacobian_values=True):
         extreme_entries = iscale.extreme_jacobian_entries(
             m, jac=jac_scaled, nlp=nlp, zero=1e-20, large=100
         )
-        
+
         # sorted_entries = sorted(extreme_entries, key=lambda x: x[2].name)
         # print(sorted_entries)
         # assert False
-        sorted_entries ={}
+        sorted_entries = {}
         for val, con, var in extreme_entries:
-            var_tag = ('.'.join(var.name.split(".")[:3]))
+            var_tag = ".".join(var.name.split(".")[:3])
             if var_tag not in sorted_entries:
                 sorted_entries[var_tag] = []
             sorted_entries[var_tag].append((val, con, var))
-            
+
         header = f"{'Value':<10s}{'Variable':<55s}{'Value':<10s}{'Scale':<10s}{'Factor':<10s}"
         print(header)
         print("-" * len(header))
@@ -47,14 +47,16 @@ def check_jac(m, print_extreme_jacobian_values=True):
             print(f"{key}")
             for val, con, var in content:
                 if val >= 100:
-                    var_tag_end = '.'.join(var.name.split(".")[3:])
+                    var_tag_end = ".".join(var.name.split(".")[3:])
                     value_scale = calc_scale(value(var))
                     current_scale = iscale.get_scaling_factor(var)
                     if current_scale is None:
                         current_scale = 0
                     else:
                         current_scale = math.log(current_scale, 10)
-                    print(f'  {f"{val:.0f}":<5s}{f"{var_tag_end}":<60s}{f"{value(var):<10.2f}"}{f"{value_scale:<10.1f}"}{f"{current_scale:<10.2f}"}')
+                    print(
+                        f'  {f"{val:.0f}":<5s}{f"{var_tag_end}":<60s}{f"{value(var):<10.2f}"}{f"{value_scale:<10.1f}"}{f"{current_scale:<10.2f}"}'
+                    )
                     # print(val, '.'.join(var.name.split(".")[3:]), value(var), calc_scale(value(var)), iscale.get_scaling_factor(var))
             # for v in val:
             #     print(val, var.name, value(var), calc_scale(value(var)), iscale.get_scaling_factor(var))
@@ -327,7 +329,11 @@ def standard_solve(
             print("--------------------------")
         except:
             print("------ifeasible_constraints-test---------")
-            print_infeasible_constraints(m, print_expression=True, print_variables=False,)
+            print_infeasible_constraints(
+                m,
+                print_expression=False,
+                print_variables=False,
+            )
             succes = "Solution NOT optimal !!!!!!!!!!!!!!"
             print("!-!-!-!-!-!-!-!-!-!-!-!-!")
         if m.find_component("fs.costing.LCOW") is not None:

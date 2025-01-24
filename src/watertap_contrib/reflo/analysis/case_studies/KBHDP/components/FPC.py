@@ -54,7 +54,7 @@ surrogate_filename = os.path.join(
     parent_dir,
     # "data/FPC_KBHDP_el_paso_MID_heat_load_1-25_hours_storage_0-24_temperature_hot_50-100.json")
     # "data/FPC_KBHDP_el_paso_HIGH_heat_load_1-50_hours_storage_0-24_temperature_hot_50-100.json"
-    "data/FPC_KBHDP_el_paso_REALLY_HIGH_heat_load_1-100_hours_storage_0-24_temperature_hot_50-100.json"
+    "data/FPC_KBHDP_el_paso_REALLY_HIGH_heat_load_1-100_hours_storage_0-24_temperature_hot_50-100.json",
 )
 
 
@@ -132,18 +132,20 @@ def add_fpc_costing(m, costing_block=None):
 
 
 def add_FPC_scaling(m, blk):
-    set_scaling_factor(blk.heat_annual_scaled, 1e3)
-    set_scaling_factor(blk.electricity_annual_scaled, 1e2)
-    set_scaling_factor(blk.heat_load, 1e6)
-    set_scaling_factor(blk.hours_storage, 1/10)
+    set_scaling_factor(blk.heat_annual_scaled, 1e-8)
+    set_scaling_factor(blk.electricity_annual_scaled, 1e-2)
+    set_scaling_factor(blk.heat_load, 1e-6)
+    set_scaling_factor(blk.hours_storage, 1 / 10)
 
-    constraint_scaling_transform(blk.heat_constraint, 1e-3)
-    constraint_scaling_transform(blk.electricity_constraint, 1e-4)
+    # constraint_scaling_transform(blk.heat_constraint, 1e-3)
+    # constraint_scaling_transform(blk.electricity_constraint, 1e-4)
+
 
 def add_fpc_costing_scaling(m, blk):
-    set_scaling_factor(blk.yearly_heat_production, 1e-8)
+    set_scaling_factor(blk.yearly_heat_production, 1e-9)
     set_scaling_factor(blk.lifetime_heat_production, 1e-9)
     set_scaling_factor(blk.aggregate_flow_heat, 1e3)
+
 
 def breakdown_dof(blk):
     equalities = [c for c in activated_equalities_generator(blk)]
@@ -323,3 +325,13 @@ if __name__ == "__main__":
     add_fpc_costing(m)
     results = solve(m)
     report_fpc(m)
+    print("\n")
+    print(
+        f'{"Heat Load FPC":<40s}{value(m.fs.energy.FPC.heat_load):<5.1f}{pyunits.get_units(m.fs.energy.FPC.heat_load)}'
+    )
+    print(
+        f'{"Heat Flow FPC":<40s}{value(pyunits.convert(m.fs.energy.FPC.heat, to_units=pyunits.MW)):<5.1f}{pyunits.get_units(pyunits.convert(m.fs.energy.FPC.heat, to_units=pyunits.MW))}'
+    )
+    print(
+        f'{"Load Utilization %":<40s}{(100*value(pyunits.convert(m.fs.energy.FPC.heat, to_units=pyunits.MW)))/(value(pyunits.convert(m.fs.energy.FPC.heat_load, to_units=pyunits.MW))):<5.1f}{"%"}'
+    )

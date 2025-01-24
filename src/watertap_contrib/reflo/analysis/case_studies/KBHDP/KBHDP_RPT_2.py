@@ -69,42 +69,55 @@ def main():
     box_solve_problem(m)
     solve(m, debug=False)
 
-    optimize(m, 
-            water_recovery=0.45, 
-            # heat_price=0.01, 
-            grid_frac_heat=0.75)
+    optimize(
+        m,
+        water_recovery=0.45,
+        # heat_price=0.01,
+        grid_frac_heat=0.9,
+    )
     solve(m, debug=True)
 
-    #TODO: Investigate why FPC Heat Load is so much more than the heat demand of the LTMED
-    # # # display_system_stream_table(m)
+    # TODO: Investigate why FPC Heat Load is so much more than the heat demand of the LTMED
+    display_system_stream_table(m)
     report_LTMED(m)
-    # # # report_pump(m, m.fs.treatment.pump)
+    report_pump(m, m.fs.treatment.pump)
     report_fpc(m)
-    print(m.fs.costing.frac_heat_from_grid.display())
-    print(m.fs.costing.aggregate_flow_heat.display())
-    print('\n')
-    print(f'{"LTMED Heat Demand":<40s}{value(pyunits.convert(m.fs.treatment.LTMED.unit.thermal_power_requirement, to_units=pyunits.MW)):<5.1f}{pyunits.get_units(pyunits.convert(m.fs.treatment.LTMED.unit.thermal_power_requirement, to_units=pyunits.MW))}')
-    print(f'{"Heat Load FPC":<40s}{value(m.fs.energy.FPC.heat_load):<5.1f}{pyunits.get_units(m.fs.energy.FPC.heat_load)}')
-    print(f'{"Heat Flow FPC":<40s}{value(pyunits.convert(m.fs.energy.FPC.heat, to_units=pyunits.MW)):<5.1f}{pyunits.get_units(pyunits.convert(m.fs.energy.FPC.heat, to_units=pyunits.MW))}')
-    print(f'{"Load Utilization %":<40s}{(100*value(pyunits.convert(m.fs.energy.FPC.heat, to_units=pyunits.MW)))/(value(pyunits.convert(m.fs.energy.FPC.heat_load, to_units=pyunits.MW))):<5.1f}{"%"}')
-    print('\n')
-    print(f'{"Aggregate Flow Heat Treatment":<40s}{value(pyunits.convert(m.fs.treatment.costing.aggregate_flow_heat, to_units=pyunits.MW)):<5.1f}{pyunits.get_units(pyunits.convert(m.fs.treatment.costing.aggregate_flow_heat, to_units=pyunits.MW))}')
-    print(f'{"Aggregate Flow Heat Energy":<40s}{value(pyunits.convert(m.fs.energy.costing.aggregate_flow_heat, to_units=pyunits.MW)):<5.1f}{pyunits.get_units(pyunits.convert(m.fs.energy.costing.aggregate_flow_heat, to_units=pyunits.MW))}')
-    print(f'{"Aggregate Flow Heat Grid":<40s}{value(pyunits.convert(m.fs.costing.aggregate_flow_heat, to_units=pyunits.MW)):<5.1f}{pyunits.get_units(pyunits.convert(m.fs.costing.aggregate_flow_heat, to_units=pyunits.MW))}')
-    print(f'{"Fracion of Heat From Grid":<40s}{100*value(m.fs.costing.frac_heat_from_grid):<5.1f}{"%"}')
-    m.fs.costing.LCOW.display()
-    # # m.fs.energy.costing.LCOH.display()
-    m.fs.costing.LCOT.display()
+    print("\n")
+    print(
+        f'{"LTMED Heat Demand":<40s}{value(pyunits.convert(m.fs.treatment.LTMED.unit.thermal_power_requirement, to_units=pyunits.MW)):<5.1f}{pyunits.get_units(pyunits.convert(m.fs.treatment.LTMED.unit.thermal_power_requirement, to_units=pyunits.MW))}'
+    )
+    print(
+        f'{"Heat Load FPC":<40s}{value(m.fs.energy.FPC.heat_load):<5.1f}{pyunits.get_units(m.fs.energy.FPC.heat_load)}'
+    )
+    print(
+        f'{"Heat Flow FPC":<40s}{value(pyunits.convert(m.fs.energy.FPC.heat, to_units=pyunits.MW)):<5.1f}{pyunits.get_units(pyunits.convert(m.fs.energy.FPC.heat, to_units=pyunits.MW))}'
+    )
+    print(
+        f'{"Load Utilization %":<40s}{(100*value(pyunits.convert(m.fs.energy.FPC.heat, to_units=pyunits.MW)))/(value(pyunits.convert(m.fs.energy.FPC.heat_load, to_units=pyunits.MW))):<5.1f}{"%"}'
+    )
+    print("\n")
+    print(
+        f'{"Aggregate Flow Heat Treatment":<40s}{value(pyunits.convert(m.fs.treatment.costing.aggregate_flow_heat, to_units=pyunits.MW)):<5.1f}{pyunits.get_units(pyunits.convert(m.fs.treatment.costing.aggregate_flow_heat, to_units=pyunits.MW))}'
+    )
+    print(
+        f'{"Aggregate Flow Heat Energy":<40s}{value(pyunits.convert(m.fs.energy.costing.aggregate_flow_heat, to_units=pyunits.MW)):<5.1f}{pyunits.get_units(pyunits.convert(m.fs.energy.costing.aggregate_flow_heat, to_units=pyunits.MW))}'
+    )
+    print(
+        f'{"Aggregate Flow Heat Grid":<40s}{value(pyunits.convert(m.fs.costing.aggregate_flow_heat, to_units=pyunits.MW)):<5.1f}{pyunits.get_units(pyunits.convert(m.fs.costing.aggregate_flow_heat, to_units=pyunits.MW))}'
+    )
+    print(
+        f'{"Fracion of Heat From Grid":<40s}{100*value(m.fs.costing.frac_heat_from_grid):<5.1f}{"%"}'
+    )
+    # m.fs.costing.LCOW.display()
+    # # # m.fs.energy.costing.LCOH.display()
+    # m.fs.costing.LCOT.display()
     # # # display_costing_breakdown(m)
 
     return m
 
 
 def build_sweep(
-    grid_frac_heat=None,
-    heat_price=None,
-    water_recovery=None,
-    objective="LCOT"
+    grid_frac_heat=None, heat_price=None, water_recovery=None, objective="LCOT"
 ):
     m = build_system(RE=True)
     add_connections(m)
@@ -353,7 +366,7 @@ def add_costing(m):
 
     m.fs.costing.add_annual_water_production(treatment.product.properties[0].flow_vol)
     m.fs.costing.add_LCOW(treatment.product.properties[0].flow_vol)
-    
+
     m.fs.costing.initialize()
 
 
@@ -371,19 +384,21 @@ def get_scaling_factors(m):
 
 def scale_costing(m):
     treatment = m.fs.treatment
-    
+
     # TBD
     if m.fs.has_RE:
         energy = m.fs.energy
         add_fpc_costing_scaling(m, energy.costing)
         # iscale.set_scaling_factor(m.fs.energy.costing.yearly_heat_production, 1e-6)
         # iscale.set_scaling_factor(m.fs.energy.costing.lifetime_heat_production, 1e-8)
-    # print(m.fs.costing.display())
+        # print(m.fs.costing.display())
 
-    # iscale.set_scaling_factor(m.fs.costing.aggregate_flow_electricity_sold, 0)
-    # iscale.set_scaling_factor(m.fs.costing.aggregate_flow_heat_sold, 0)
-        iscale.set_scaling_factor(m.fs.costing.aggregate_flow_electricity_purchased, 1e4)
-    
+        # iscale.set_scaling_factor(m.fs.costing.aggregate_flow_electricity_sold, 0)
+        # iscale.set_scaling_factor(m.fs.costing.aggregate_flow_heat_sold, 0)
+        iscale.set_scaling_factor(
+            m.fs.costing.aggregate_flow_electricity_purchased, 1e4
+        )
+
     # iscale.set_scaling_factor(m.fs.energy.costing.yearly_heat_production, 1e-6)
     # iscale.set_scaling_factor(m.fs.energy.costing.yearly_heat_production, 1e-6)
     # iscale.set_scaling_factor(m.fs.energy.costing.yearly_heat_production, 1e-6)
@@ -407,7 +422,6 @@ def apply_system_scaling(m):
     iscale.set_scaling_factor(
         m.fs.treatment.product.properties[0.0].dens_mass_phase["Liq"], 1e-3
     )
-
 
 
 def apply_scaling(m):
@@ -619,7 +633,7 @@ def solve(m, solver=None, tee=True, raise_on_failure=True, debug=False):
         print(m.fs.treatment.LTMED.unit.feed_props[0].flow_vol_phase.display())
         print(m.fs.treatment.LTMED.unit.distillate_props[0.0].flow_vol_phase.display())
         print(m.fs.treatment.LTMED.unit.recovery_vol_phase.display())
- 
+
         raise RuntimeError(msg)
     else:
         print("\n--------- FAILED SOLVE!!! ---------\n")
@@ -683,14 +697,13 @@ def optimize(
         m.fs.water_recovery.setlb(lower_bound)
         m.fs.water_recovery.setub(upper_bound)
 
-
     if heat_price is not None:
         energy.FPC.heat_load.unfix()
         energy.FPC.hours_storage.unfix()
         m.fs.costing.frac_heat_from_grid.unfix()
         m.fs.costing.heat_cost_buy.fix(heat_price)
 
-#BUG This is an issue
+    # BUG This is an issue
     if grid_frac_heat is not None:
         energy.FPC.heat_load.unfix()
         energy.FPC.hours_storage.fix(18)

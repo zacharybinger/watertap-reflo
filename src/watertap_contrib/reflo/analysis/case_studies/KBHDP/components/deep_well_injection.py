@@ -146,12 +146,13 @@ def add_DWI_costing(m, blk, costing_blk=None):
         },  # could be "as_capex" or "blm"
     )
 
+
 def add_DWI_scaling(m, blk):
-    set_scaling_factor(blk.feed.properties[0.0].mass_frac_phase_comp['Liq','H2O'], 0.1)
+    set_scaling_factor(blk.feed.properties[0.0].mass_frac_phase_comp["Liq", "H2O"], 0.1)
     # set_scaling_factor(blk.feed.properties[0.0].mass_frac_phase_comp['Liq','TDS'], 1e-2)
 
-    set_scaling_factor(blk.unit.properties[0.0].mass_frac_phase_comp['Liq','H2O'], 0.1)
-    set_scaling_factor(blk.unit.properties[0.0].flow_vol_phase['Liq'], 1e-2)
+    set_scaling_factor(blk.unit.properties[0.0].mass_frac_phase_comp["Liq", "H2O"], 0.1)
+    set_scaling_factor(blk.unit.properties[0.0].flow_vol_phase["Liq"], 1e-2)
     # set_scaling_factor(blk.unit.properties[0.0].mass_frac_phase_comp['Liq','TDS'], 1e-2)
     # set_scaling_factor(blk.unit.properties[0.0].dens_mass_phase['Liq'], 1e3)
 
@@ -188,7 +189,7 @@ def build_system():
         "SiO2": 0.054,
         "Alkalinity_2-": 0.421,
     }
-    #BUG MCAS for RO flowsheets WaterParameterBlock for LTMED causing issues
+    # BUG MCAS for RO flowsheets WaterParameterBlock for LTMED causing issues
     m.fs.properties = MCASParameterBlock(
         solute_list=inlet_conc.keys(), material_flow_basis=MaterialFlowBasis.mass
     )

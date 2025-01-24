@@ -65,27 +65,31 @@ def main():
     init_system(m)
     add_costing(m)
     scale_costing(m)
-    # box_solve_problem(m)
+    box_solve_problem(m)
     # solve(m, debug=True)
     # scale_costing(m)
-    optimize(m, ro_mem_area=None, water_recovery=0.8, grid_frac=0.99, objective="LCOT")
-    solve(m, debug=True)
-    # # display_flow_table(m)
-    # display_system_stream_table(m)
-    # report_RO(m, m.fs.treatment.RO)
-    # # # # # report_pump(m, m.fs.treatment.pump)
-    # # report_PV(m)
-    # # # # # m.fs.treatment.costing.display()
-    # # # # # m.fs.energy.costing.display()""
-    # # # # # m.fs.costing.display()
-    # display_costing_breakdown(m)
-    # # # # # print(m.fs.energy.pv.display())
-    # # # print_system_scaling_report(m)
-    report_PV(m)
-    report_pump(m, m.fs.treatment.pump)
-    print(m.fs.costing.frac_elec_from_grid.display())
-    print(m.fs.costing.aggregate_flow_electricity_purchased.display())
-    # print(m.fs.costing.LCOT)
+    # solve(m, debug=False)
+    optimize(m, ro_mem_area=None, water_recovery=None, elec_price=0.13, objective="LCOT")
+    # m.fs.energy.costing.pv_surrogate.cost_per_watt_installed.fix(1.5)
+    solve(m, debug=False)
+    # # # display_flow_table(m)
+    # # display_system_stream_table(m)
+    # # report_RO(m, m.fs.treatment.RO)
+    # # # # # # report_pump(m, m.fs.treatment.pump)
+    # # # report_PV(m)
+    # # # # # # m.fs.treatment.costing.display()
+    # # # # # # m.fs.energy.costing.display()""
+    # # # # # # m.fs.costing.display()
+    # # display_costing_breakdown(m)
+    # # # # # # print(m.fs.energy.pv.display())
+    # # # # print_system_scaling_report(m)
+    # report_PV(m)
+    # report_pump(m, m.fs.treatment.pump)
+    # # print(m.fs.costing.frac_elec_from_RE.display())
+    # print(f'\nRE %: {value(m.fs.costing.frac_elec_from_RE)*100:.2f}')
+    # # print(m.fs.costing.aggregate_flow_electricity_purchased.display())
+    # # print(m.fs.costing.LCOT)
+    print(m.fs.energy.costing.pv_surrogate.display())
 
     return m
 
@@ -107,6 +111,7 @@ def build_sweep(
     init_system(m)
     add_costing(m)
     scale_costing(m)
+    box_solve_problem(m)
     optimize(
         m,
         ro_mem_area=ro_mem_area,
@@ -317,7 +322,11 @@ def add_energy_costing(m):
 
     energy.pv.costing = UnitModelCostingBlock(
         flowsheet_costing_block=energy.costing,
+        costing_method_arguments={
+            "cost_method": "simple"
+        }
     )
+    # m.fs.energy.costing.pv_surrogate.cost_per_watt_installed.fix(1.5)
 
     energy.costing.cost_process()
     energy.costing.add_LCOE()
@@ -494,7 +503,7 @@ def display_unfixed_vars(blk, report=True):
             print(f"\t{v2.name:<40s}")
 
 
-def set_operating_conditions(m, RO_pressure=20e5):
+def set_operating_conditions(m, RO_pressure=35e5):
     treatment = m.fs.treatment
     pump_efi = 0.8  # pump efficiency [-]
     # Set inlet conditions and operating conditions for each unit
@@ -503,8 +512,8 @@ def set_operating_conditions(m, RO_pressure=20e5):
     set_UF_op_conditions(treatment.UF)
     treatment.pump.efficiency_pump.fix(pump_efi)
     treatment.pump.control_volume.properties_out[0].pressure.fix(RO_pressure)
-    set_ro_system_operating_conditions(m, treatment.RO, mem_area=10000)
-    set_pv_constraints(m, focus="Energy")
+    set_ro_system_operating_conditions(m, treatment.RO, mem_area=25000)
+    set_pv_constraints(m, focus="Size")
 
 
 def init_treatment(m, verbose=True, solver=None):
@@ -519,6 +528,7 @@ def init_treatment(m, verbose=True, solver=None):
     assert_no_degrees_of_freedom(m)
     treatment.feed.initialize(optarg=optarg)
     propagate_state(treatment.feed_to_translator)
+
     report_MCAS_stream_conc(m, treatment.feed.properties[0.0])
     treatment.MCAS_to_TDS_translator.initialize(optarg=optarg)
     propagate_state(treatment.translator_to_EC)
@@ -539,10 +549,11 @@ def init_treatment(m, verbose=True, solver=None):
 
     init_ro_system(m, treatment.RO)
     propagate_state(treatment.ro_to_product)
-    propagate_state(treatment.ro_to_dwi)
-
     treatment.product.initialize(optarg=optarg)
+
+    propagate_state(treatment.ro_to_dwi)    
     init_DWI(m, treatment.DWI)
+
     display_system_stream_table(m)
 
 
@@ -605,7 +616,7 @@ def set_prob_for_box_solve(m):
 
 
 def box_solve_problem(m):
-    set_prob_for_box_solve(m)
+    # set_prob_for_box_solve(m)
     breakdown_dof(m, detailed=False)
     fsTools.standard_solve(
         m,

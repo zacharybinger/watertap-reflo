@@ -128,7 +128,7 @@ def set_LTMED_operating_conditions(blk):
 
     blk.unit.steam_props[0].temperature.fix(steam_temperature + 273.15)
     blk.unit.recovery_vol_phase[0, "Liq"].fix(recovery_ratio)
-    
+
     print(blk.unit.display())
     # assert False
 
@@ -137,14 +137,18 @@ def add_LTMED_scaling(m, blk):
     # set_scaling_factor(blk.product.properties[0.0].flow_mass_phase_comp['Liq','TDS'], 1e-11)
     # set_scaling_factor(blk.unit.thermal_power_requirement, 1e-6)
     # set_scaling_factor(blk.unit.distillate_props[0.0].flow_vol_phase['Liq'], 1)
-    
+
     set_scaling_factor(blk.unit.feed_props[0.0].flow_vol_phase["Liq"], 1)
     # set_scaling_factor(blk.unit.feed_props[0.0].dens_mass_phase["Liq"], 1e-3)
     # set_scaling_factor(blk.unit.brine_props[0.0].dens_mass_phase["Liq"], 1e-4)# BUG: Breaks if set to 1e-4
     # set_scaling_factor(blk.unit.cooling_out_props[0.0].dens_mass_phase["Liq"], 1e-4)# BUG: Breaks if set to 1e-4
     set_scaling_factor(blk.unit.distillate_props[0.0].flow_vol_phase["Liq"], 1e2)
-    set_scaling_factor(blk.unit.distillate_props[0.0].flow_mass_phase_comp['Liq','H2O'], 1e-2)
-    set_scaling_factor(blk.unit.cooling_out_props[0.0].conc_mass_phase_comp["Liq","TDS"], 10)
+    set_scaling_factor(
+        blk.unit.distillate_props[0.0].flow_mass_phase_comp["Liq", "H2O"], 1e-2
+    )
+    set_scaling_factor(
+        blk.unit.cooling_out_props[0.0].conc_mass_phase_comp["Liq", "TDS"], 10
+    )
 
     # set_scaling_factor(blk.unit.brine_props[0.0].conc_mass_phase_comp['Liq','TDS'],1e-2)
     # set_scaling_factor(blk.unit.feed_props[0.0].dens_mass_phase['Liq'], 1e-3)
@@ -158,9 +162,9 @@ def add_LTMED_scaling(m, blk):
     # set_scaling_factor(blk.unit.feed_cool_vol_flow, 1e-4)
     # # set_scaling_factor(blk.unit.distillate_props[0.0].flow_vol_phase['Liq'], 0)
     # # set_scaling_factor(blk.unit.distillate_props[0.0].flow_vol_phase['Liq'], 0)
-    
+
     # set_scaling_factor(blk.unit.cooling_out_props[0.0].flow_vol_phase["Liq"], 10)
-    
+
     set_scaling_factor(blk.unit.feed_cool_vol_flow, 1e-4)
 
     set_scaling_factor(blk.unit.specific_area_per_m3_day, 1e2)
@@ -171,7 +175,7 @@ def add_LTMED_scaling(m, blk):
 
     # set_scaling_factor(blk.unit.distillate_props[0.0].flow_mass_phase_comp["Liq", "H2O"], 1e-3)
     set_scaling_factor(blk.unit.brine_props[0.0].flow_vol_phase["Liq"], 1e-1)
-    
+
     # constraint_scaling_transform(blk.unit.eq_specific_area_per_m3_day, 1e-2)
     # # constraint_scaling_transform(blk.unit.eq_specific_area_kg_s, 1e-2)
     # constraint_scaling_transform(blk.unit.eq_steam_mass_flow, 1e-2)
@@ -259,7 +263,7 @@ def set_system_operating_conditions(m):
     m.fs.liquid_prop.set_default_scaling(
         "flow_mass_phase_comp", 1, index=("Liq", "TDS")
     )
-    
+
     m.fs.vapor_prop.set_default_scaling(
         "flow_mass_phase_comp", 1e-3, index=("Liq", "H2O")
     )
