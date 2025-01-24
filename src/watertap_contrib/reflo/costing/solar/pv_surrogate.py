@@ -38,6 +38,7 @@ def cost_pv_surrogate(blk, cost_method=PVSurrogateCostMethod.detailed):
             f" {cost_method}. Argument must be a member of the PVSurrogateCostMethod Enum."
         )
 
+
 def build_pv_surrogate_cost_simple_param_block(blk):
     costing = blk.parent_block()
 
@@ -270,8 +271,7 @@ def cost_pv_surrogate_simple(blk):
     )
 
     blk.capital_cost_constraint = pyo.Constraint(
-        expr=blk.capital_cost
-        == blk.direct_capital_cost
+        expr=blk.capital_cost == blk.direct_capital_cost
     )
 
     blk.land_cost_constraint = pyo.Constraint(
@@ -288,6 +288,5 @@ def cost_pv_surrogate_simple(blk):
         expr=blk.variable_operating_cost
         == pv_params.variable_operating_by_generation * blk.unit_model.annual_energy
     )
-
 
     blk.costing_package.cost_flow(-1 * blk.unit_model.electricity, "electricity")

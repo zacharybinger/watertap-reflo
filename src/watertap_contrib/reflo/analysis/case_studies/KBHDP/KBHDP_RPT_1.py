@@ -69,7 +69,9 @@ def main():
     # solve(m, debug=True)
     # scale_costing(m)
     # solve(m, debug=False)
-    optimize(m, ro_mem_area=None, water_recovery=None, elec_price=0.13, objective="LCOT")
+    optimize(
+        m, ro_mem_area=None, water_recovery=None, elec_price=0.13, objective="LCOT"
+    )
     # m.fs.energy.costing.pv_surrogate.cost_per_watt_installed.fix(1.5)
     solve(m, debug=False)
     # # # display_flow_table(m)
@@ -322,9 +324,7 @@ def add_energy_costing(m):
 
     energy.pv.costing = UnitModelCostingBlock(
         flowsheet_costing_block=energy.costing,
-        costing_method_arguments={
-            "cost_method": "simple"
-        }
+        costing_method_arguments={"cost_method": "simple"},
     )
     # m.fs.energy.costing.pv_surrogate.cost_per_watt_installed.fix(1.5)
 
@@ -551,7 +551,7 @@ def init_treatment(m, verbose=True, solver=None):
     propagate_state(treatment.ro_to_product)
     treatment.product.initialize(optarg=optarg)
 
-    propagate_state(treatment.ro_to_dwi)    
+    propagate_state(treatment.ro_to_dwi)
     init_DWI(m, treatment.DWI)
 
     display_system_stream_table(m)

@@ -587,10 +587,7 @@ class REFLOSystemCostingData(WaterTAPCostingBlockData):
             print("Did Not Detected Energy Generation")
             self.frac_elec_from_grid.fix(1)
 
-        self.frac_elec_from_RE = pyo.Expression(
-            expr= 1 - self.frac_elec_from_grid
-            )
-
+        self.frac_elec_from_RE = pyo.Expression(expr=1 - self.frac_elec_from_grid)
 
         if all(hasattr(b, "aggregate_flow_heat") for b in [treat_cost, energy_cost]):
 
