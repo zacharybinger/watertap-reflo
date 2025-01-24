@@ -38,16 +38,16 @@
 # HALF
 KBHDP_RPT_2_frac_heat_from_grid_sweep:
   build_defaults:
-    grid_frac_heat: 0.5
-    water_recovery: 0.35
+    grid_frac_heat: 0.9
+    water_recovery: 0.475
     heat_price: 0.01
   sweep_param_loop:
     Grid Heat Fraction:
       type: LinearSample
       param: fs.costing.frac_heat_from_grid
-      lower_limit: 0.1
-      upper_limit: 0.9
-      num_samples: 9
+      lower_limit: 0
+      upper_limit: 1
+      num_samples: 11
 # KBHDP_RPT_2_heat_price_sweep:
 #   build_defaults:
 #     heat_price: 0.01
