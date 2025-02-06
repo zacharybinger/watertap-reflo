@@ -156,6 +156,7 @@ def cost_flat_plate(blk):
         "electricity",
     )
     blk.costing_package.cost_flow(
+        # -1 * flat_plate.heat * blk.utilization_factor_performance_increase,
         -1 * flat_plate.heat,
         "heat",
     )

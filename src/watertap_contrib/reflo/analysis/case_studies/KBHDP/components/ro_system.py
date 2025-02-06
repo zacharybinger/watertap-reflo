@@ -77,7 +77,6 @@ __all__ = [
     "build_ro_stage",
     "init_ro_system",
     "init_ro_stage",
-    "set_operating_conditions",
     "set_ro_system_operating_conditions",
     "add_ro_costing",
     "add_ro_scaling",

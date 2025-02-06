@@ -500,10 +500,13 @@ def init_treatment(m, verbose=True, solver=None):
 
     init_ec(m, treatment.EC)
     propagate_state(treatment.EC_to_UF)
+    propagate_state(treatment.EC_to_sludge)
+    treatment.sludge.initialize(optarg=optarg)
 
     init_UF(m, treatment.UF)
     propagate_state(treatment.UF_to_translator3)
     propagate_state(treatment.UF_to_waste)
+    treatment.UF_waste.initialize(optarg=optarg)
 
     treatment.TDS_to_TDS_translator.initialize(optarg=optarg)
     propagate_state(treatment.translator_to_pump)

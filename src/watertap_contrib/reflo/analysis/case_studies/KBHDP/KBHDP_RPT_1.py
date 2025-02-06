@@ -316,6 +316,9 @@ def add_energy_costing(m):
 
     energy.pv.costing = UnitModelCostingBlock(
         flowsheet_costing_block=energy.costing,
+        costing_method_arguments={
+            "cost_method": "simple"
+        }
     )
 
     energy.costing.cost_process()
@@ -524,10 +527,13 @@ def init_treatment(m, verbose=True, solver=None):
 
     init_ec(m, treatment.EC)
     propagate_state(treatment.EC_to_UF)
+    propagate_state(treatment.EC_to_sludge)
+    treatment.sludge.initialize(optarg=optarg)
 
     init_UF(m, treatment.UF)
     propagate_state(treatment.UF_to_translator3)
     propagate_state(treatment.UF_to_waste)
+    treatment.UF_waste.initialize(optarg=optarg)
 
     treatment.TDS_to_NaCl_translator.initialize(optarg=optarg)
     propagate_state(treatment.translator_to_pump)

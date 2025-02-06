@@ -110,7 +110,7 @@ def add_pv_costing(m, blk):
     energy.pv.costing = UnitModelCostingBlock(
         flowsheet_costing_block=energy.costing,
         costing_method_arguments={
-            "cost_method": "detailed"
+            "cost_method": "simple"
         }
     )
 
