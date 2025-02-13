@@ -1,0 +1,268 @@
+RPT2_diff_analysis:
+  build_defaults:
+    water_recovery: 0.35
+    heat_price: 0.005
+    grid_frac_heat: 0.9
+    objective: LCOT
+  diff_param_loop:
+    Aluminum Cost:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.treatment.costing.aluminum_cost
+      nominal_lb: 1.115
+      nominal_ub: 2.23
+      relative_lb: -0.01
+      relative_ub: -0.01
+      group: Cost
+      y_convert: 1
+      num_samples: 5
+    UF Energy Consumption:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.treatment.UF.unit.energy_electric_flow_vol_inlet
+      nominal_lb: 0.025
+      nominal_ub: 0.05
+      relative_lb: -0.01
+      relative_ub: -0.01
+      group: Performance
+      y_convert: 1
+      num_samples: 5
+    Pump Efficiency:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.treatment.pump.efficiency_pump[0.0]
+      nominal_lb: 0.8
+      nominal_ub: 0.9
+      relative_lb: 0.1
+      relative_ub: 0.1
+      group: Performance
+      y_convert: -1
+      num_samples: 5
+    Pump Cost:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.treatment.costing.high_pressure_pump.cost
+      nominal_lb: 1.0
+      nominal_ub: 2.0
+      relative_lb: -0.01
+      relative_ub: -0.01
+      group: Cost
+      y_convert: 1
+      num_samples: 5
+    Sludge Handling Cost:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.treatment.costing.electrocoagulation.sludge_handling_cost[kbhdp]
+      nominal_lb: 0
+      nominal_ub: 0.1
+      relative_lb: -0.01
+      relative_ub: -0.01
+      group: Cost
+      y_convert: 1
+      num_samples: 5
+    EC Current Efficiency:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.treatment.EC.ec.current_efficiency
+      nominal_lb: 1
+      nominal_ub: 2
+      relative_lb: 0.01
+      relative_ub: 0.01
+      group: Performance
+      y_convert: -1
+      num_samples: 5
+    Metal Dose:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.treatment.EC.ec.metal_dose
+      nominal_lb: 5.0E-5
+      nominal_ub: 1.0E-4
+      relative_lb: -0.01
+      relative_ub: -0.01
+      group: Performance
+      y_convert: 1
+      num_samples: 5
+    Electrode Gap:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.treatment.EC.ec.electrode_gap
+      nominal_lb: 0.0025
+      nominal_ub: 0.005
+      relative_lb: -0.01
+      relative_ub: -0.01
+      group: Performance
+      y_convert: 1
+      num_samples: 5
+    Electricity Cost:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.costing.electricity_cost_buy
+      nominal_lb: 0.1
+      nominal_ub: 0.2
+      relative_lb: 0.01
+      relative_ub: 0.01
+      y_convert: 1
+      group: Cost
+      num_samples: 5
+    # LTMED Recovery:
+    #   diff_mode: percentile
+    #   diff_sample_type: UniformSample
+    #   param: fs.treatment.LTMED.recovery
+    #   nominal_lb: 0.35
+    #   nominal_ub: 0.45
+    #   relative_lb: 0.1
+    #   relative_ub: 0.1
+    #   group: Cost
+    #   num_samples: 5
+    # LTMED SEC:
+    #   diff_mode: percentile
+    #   diff_sample_type: UniformSample
+    #   param: fs.treatment.LTMED.specific_energy_consumption_electric
+    #   nominal_lb: 0.35
+    #   nominal_ub: 0.45
+    #   relative_lb: 0.1
+    #   relative_ub: 0.1
+    #   group: Cost
+    #   num_samples: 5
+    # LTMED Capacity:
+    #   diff_mode: percentile
+    #   diff_sample_type: UniformSample
+    #   param: fs.treatment.LTMED.capacity
+    #   nominal_lb: 0.35
+    #   nominal_ub: 0.45
+    #   relative_lb: 0.1
+    #   relative_ub: 0.1
+    #   group: Cost
+    #   num_samples: 5
+    LTMED GOR:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.treatment.LTMED.unit.gain_output_ratio
+      nominal_lb: 10
+      nominal_ub: 15
+      relative_lb: 0.05
+      relative_ub: 0.05
+      group: Performance
+      y_convert: -1
+      num_samples: 5
+    LTMED Specific Cost:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.treatment.LTMED.unit.costing.med_specific_cost
+      nominal_lb: 1500
+      nominal_ub: 2000
+      relative_lb: 0.01
+      relative_ub: 0.01
+      group: Cost
+      y_convert: 1
+      num_samples: 5
+    LTMED Evaporator Cost:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.treatment.costing.lt_med_surrogate.cost_fraction_evaporator
+      nominal_lb: 0.3
+      nominal_ub: 0.4
+      relative_lb: 0.1
+      relative_ub: 0.1
+      group: Cost
+      y_convert: -1
+      num_samples: 5
+    LTMED Specific Area:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.treatment.LTMED.unit.specific_area_per_m3_day
+      nominal_lb: 2
+      nominal_ub: 3
+      relative_lb: 0.01
+      relative_ub: 0.01
+      group: Performance
+      y_convert: 1
+      num_samples: 5
+    Brine Injection Cost:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.treatment.costing.deep_well_injection.dwi_lcow
+      nominal_lb: 0
+      nominal_ub: 0.4
+      relative_lb: -0.01
+      relative_ub: -0.01
+      group: Cost
+      y_convert: 1
+      num_samples: 5
+    sweep_reference_params: # The parameters below will be used to generate reference design and will be run simultaneously (e.g. all of them will be changed to generate a new hypothetical design here, we only provide one parameter, membrane cost, but could provide many others)
+      Aluminum Cost:
+        type: UniformSample
+        param: fs.treatment.costing.aluminum_cost
+        lower_limit: 1
+        upper_limit: 2.23
+      UF Energy Consumption:
+        type: UniformSample
+        param: fs.treatment.UF.unit.energy_electric_flow_vol_inlet
+        lower_limit: 0.025
+        upper_limit: 0.05
+      Pump Efficiency:
+        type: UniformSample
+        param: fs.treatment.pump.efficiency_pump[0.0]
+        lower_limit: 0.8
+        upper_limit: 0.9
+      Pump Cost:
+        type: UniformSample
+        param: fs.treatment.costing.high_pressure_pump.cost
+        lower_limit: 1.0
+        upper_limit: 2.0
+      EC Current Efficiency:
+        type: UniformSample
+        param: fs.treatment.EC.ec.current_efficiency
+        lower_limit: 1
+        upper_limit: 2
+      Electrode Gap:
+        type: UniformSample
+        param: fs.treatment.EC.ec.electrode_gap
+        lower_limit: 0.0025
+        upper_limit: 0.005
+      Sludge Handling Cost:
+        type: UniformSample
+        param: fs.treatment.costing.electrocoagulation.sludge_handling_cost[kbhdp]
+        lower_limit: 0
+        upper_limit: 0.1
+      Metal Dose:
+        type: UniformSample
+        param: fs.treatment.EC.ec.metal_dose
+        lower_limit: 5.0E-5
+        upper_limit: 1.0E-4
+      Electricity Cost:
+        type: UniformSample
+        param: fs.costing.electricity_cost_buy
+        lower_limit: 0.07
+        upper_limit: 0.2
+      LTMED GOR:
+        type: UniformSample
+        param: fs.treatment.LTMED.unit.gain_output_ratio
+        lower_limit: 10
+        upper_limit: 15
+      LTMED Specific Cost:
+        type: UniformSample
+        param: fs.treatment.LTMED.unit.costing.med_specific_cost
+        lower_limit: 1500
+        upper_limit: 2000
+      LTMED Evaporator Cost:
+        type: UniformSample
+        param: fs.treatment.costing.lt_med_surrogate.cost_fraction_evaporator
+        lower_limit: 0.3
+        upper_limit: 0.4
+      # LTMED SEC Thermal:
+      #   type: UniformSample
+      #   param: fs.treatment.LTMED.unit.specific_energy_consumption_thermal
+      #   lower_limit: 50
+      #   upper_limit: 60
+      LTMED Specific Area:
+        type: UniformSample
+        param: fs.treatment.LTMED.unit.specific_area_per_m3_day
+        lower_limit: 2
+        upper_limit: 3
+      Brine Injection Cost:
+        type: UniformSample
+        param: fs.treatment.costing.deep_well_injection.dwi_lcow
+        lower_limit: 0
+        upper_limit: 0.4
+      num_samples: 20

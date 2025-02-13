@@ -88,6 +88,7 @@ def build_sweep(
     grid_frac_heat=None,
     heat_price=None,
     water_recovery=None,
+    objective="LCOT",
 ):
     m = build_system(RE=True)
     add_connections(m)
@@ -97,13 +98,17 @@ def build_sweep(
     init_system(m)
     add_costing(m)
     scale_costing(m)
-    box_solve_problem(m)
+
     optimize(
         m,
         water_recovery=water_recovery,
         grid_frac_heat=grid_frac_heat,
         heat_price=heat_price,
-        objective="LCOW",
+        # assumed_SEC=True,
+        assumed_specific_area = True,
+        assumed_GOR=True,
+        assumed_MED_cost=True,
+        objective=objective,
     )
 
     return m
@@ -204,7 +209,17 @@ def build_treatment(m):
 
 def build_energy(m):
     energy = m.fs.energy = Block()
-    build_fpc(m)
+    # build_fpc(m)
+    build_fpc_high(m)
+    # Logic to select the build for FPC
+    # if grid_frac_heat>0.9:
+    #     build_fpc_low(m)
+    # elif grid_frac_heat<0.9:
+    # # build_fpc_mid(m)
+    # # build_fpc_low(m)
+    #     build_fpc_really_high(m)
+    # else:
+    #     build_fpc_low(m)
 
 
 def add_connections(m):
@@ -605,6 +620,10 @@ def optimize(
     fixed_pressure=None,
     grid_frac_heat=None,
     heat_price=None,
+    assumed_SEC = False,
+    assumed_specific_area = False,
+    assumed_GOR = False,
+    assumed_MED_cost=False,
     objective="LCOW",
 ):
     treatment = m.fs.treatment
@@ -630,6 +649,22 @@ def optimize(
         energy.FPC.hours_storage.unfix()
         m.fs.costing.frac_heat_from_grid.unfix()
         m.fs.costing.heat_cost_buy.fix(heat_price)
+
+    if assumed_SEC is True:
+        m.fs.treatment.LTMED.unit.eq_specific_thermal_energy_consumption.deactivate()
+        m.fs.treatment.LTMED.unit.specific_energy_consumption_thermal.fix(66)
+
+    if assumed_specific_area is True:
+        m.fs.treatment.LTMED.unit.eq_specific_area_per_m3_day.deactivate()
+        m.fs.treatment.LTMED.unit.specific_area_per_m3_day.fix(3)
+    
+    if assumed_GOR is True:
+        m.fs.treatment.LTMED.unit.eq_gain_output_ratio.deactivate()
+        m.fs.treatment.LTMED.unit.gain_output_ratio.fix(10)
+    
+    if assumed_MED_cost is True:
+        m.fs.treatment.LTMED.unit.costing.med_specific_cost_constraint.deactivate()
+        m.fs.treatment.LTMED.unit.costing.med_specific_cost.fix(1900)
 
     print(f"Degrees of Feedom: {degrees_of_freedom(m)}")
     assert degrees_of_freedom(m) >= 0

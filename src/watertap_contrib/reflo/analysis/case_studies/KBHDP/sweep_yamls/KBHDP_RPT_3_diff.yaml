@@ -1,0 +1,116 @@
+RPT3_diff_analysis:
+  diff_param_loop:
+    Electricity Cost:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.costing.electricity_cost_buy
+      nominal_lb: 0.1
+      nominal_ub: 0.2
+      relative_lb: 0.01
+      relative_ub: 0.01
+      group: Cost
+      y_convert: 1
+      num_samples: 5
+    Heat Cost:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.costing.heat_cost_buy
+      nominal_lb: 0.01
+      nominal_ub: 0.015
+      relative_lb: 0.01
+      relative_ub: 0.01
+      group: Cost
+      y_convert: 1
+      num_samples: 5
+    FPC Collector Cost:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.energy.costing.flat_plate.cost_per_area_collector
+      nominal_lb: 300
+      nominal_ub: 600
+      relative_lb: 0.01
+      relative_ub: 0.01
+      group: Cost
+      y_convert: 1
+      num_samples: 5
+    FPC Storage Cost:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.energy.costing.flat_plate.cost_per_volume_storage
+      nominal_lb: 1000
+      nominal_ub: 2000
+      relative_lb: 0.01
+      relative_ub: 0.01
+      group: Cost
+      y_convert: 1
+      num_samples: 5
+    FPC Land Cost:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.energy.costing.flat_plate.land_cost_per_acre
+      nominal_lb: 2000
+      nominal_ub: 4000
+      relative_lb: 0.01
+      relative_ub: 0.01
+      group: Cost
+      y_convert: 1
+      num_samples: 5
+    SEC Thermal:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.treatment.md.unit.mp.specific_energy_consumption_thermal
+      nominal_lb: 65
+      nominal_ub: 75
+      relative_lb: 0.01
+      relative_ub: 0.01
+      group: Performance
+      y_convert: 1
+      num_samples: 5
+    Brine Injection Cost:
+      diff_mode: percentile
+      diff_sample_type: UniformSample
+      param: fs.treatment.costing.deep_well_injection.dwi_lcow
+      nominal_lb: 0
+      nominal_ub: 0.4
+      relative_lb: -0.01
+      relative_ub: -0.01
+      group: Cost
+      y_convert: 1
+      num_samples: 5
+    sweep_reference_params: # The parameters below will be used to generate reference design and will be run simultaneously (e.g. all of them will be changed to generate a new hypothetical design here, we only provide one parameter, membrane cost, but could provide many others)
+      Electricity Cost:
+        type: UniformSample
+        param: fs.costing.electricity_cost_buy
+        lower_limit: 0.01
+        upper_limit: 0.015
+      Heat Cost:
+        type: UniformSample
+        param: fs.costing.heat_cost_buy
+        lower_limit: 0.07
+        upper_limit: 0.2
+      FPC Collector Cost:
+        type: UniformSample
+        param: fs.energy.costing.flat_plate.cost_per_area_collector
+        lower_limit: 300
+        upper_limit: 600
+      FPC Storage Cost:
+        type: UniformSample
+        param: fs.energy.costing.flat_plate.cost_per_volume_storage
+        lower_limit: 1000
+        upper_limit: 2000
+      FPC Land Cost:
+        type: UniformSample
+        param: fs.energy.costing.flat_plate.land_cost_per_acre
+        lower_limit: 2000
+        upper_limit: 4000
+      SEC Thermal:
+        type: UniformSample
+        param: fs.treatment.md.unit.mp.specific_energy_consumption_thermal
+        lower_limit: 65
+        upper_limit: 75
+      Brine Injection Cost:
+        type: UniformSample
+        param: fs.treatment.costing.deep_well_injection.dwi_lcow
+        lower_limit: 0
+        upper_limit: 0.4
+      num_samples: 20

@@ -6,6 +6,7 @@ from idaes.core.solvers import get_solver
 import watertap_contrib.reflo.analysis.case_studies.KBHDP.KBHDP_SOA as SOA
 import watertap_contrib.reflo.analysis.case_studies.KBHDP.KBHDP_RPT_1 as RPT1
 import watertap_contrib.reflo.analysis.case_studies.KBHDP.KBHDP_RPT_2 as RPT2
+import watertap_contrib.reflo.analysis.case_studies.KBHDP.KBHDP_RPT_3 as RPT3
 import watertap_contrib.reflo.analysis.case_studies.KBHDP.pretreatment_2 as PT2
 
 filepath = os.path.abspath(__file__)
@@ -23,8 +24,9 @@ def run_diff_sweep(case, case_name=None, diff_yaml_file=None):
         for file in files:
             file_id = file.split("_")
             case_id = case_name.split("_")
-            print(file_id[0], case_id[0])
-            if file_id[0] == 'diff':
+            # print(case_id)
+            if (file_id[0] == 'diff') and (file_id[3] == case_id[1]):
+                # print(file_id, case_id, file)
                 timestr = time.strftime("%Y%m%d-%H%M%S")
                 print("Moving Prior Data to Archive")
                 original_file = os.path.join(save_dir, "output", file)
@@ -41,7 +43,7 @@ def run_diff_sweep(case, case_name=None, diff_yaml_file=None):
         save_name="diff_sweep",
         saving_dir=save_dir,
         execute_simulations=True,
-        number_of_subprocesses=1,
+        number_of_subprocesses=8,
     )
 
 def run_case_sweep(case, case_name=None, yaml_file=None):
@@ -79,9 +81,9 @@ def run_case_sweep(case, case_name=None, yaml_file=None):
 
 def run_all_cases():
     cases = [
-        {"case": SOA, "case_name": "KBHDP_SOA_1", "yaml_file": "KBHDP_SOA_1.yaml"},
+        # {"case": SOA, "case_name": "KBHDP_SOA_1", "yaml_file": "KBHDP_SOA_1.yaml"},
         # {"case": SOA, "case_name": "KBHDP_SOA_1", "yaml_file": "KBHDP_SOA_1_diff.yaml"},
-        # {"case": RPT1, "case_name": "KBHDP_RPT_1", "yaml_file": "KBHDP_RPT_1.yaml"},
+        {"case": RPT1, "case_name": "KBHDP_RPT_1", "yaml_file": "KBHDP_RPT_1.yaml"},
         # {"case": RPT2, "case_name": "KBHDP_RPT_2", "yaml_file": "KBHDP_RPT_2.yaml"},
     ]
 
@@ -90,9 +92,23 @@ def run_all_cases():
             case["case"], case_name=case["case_name"], yaml_file=case["yaml_file"]
         )
 
+def run_all_diff_cases():
+    cases = [
+        {"case": RPT1, "case_name": "KBHDP_RPT1_diff", "yaml_file": "KBHDP_RPT_1_diff.yaml"},
+        # {"case": RPT2, "case_name": "KBHDP_RPT2_diff", "yaml_file": "KBHDP_RPT_2_diff.yaml"},
+        # {"case": RPT3, "case_name": "KBHDP_RPT3_diff", "yaml_file": "KBHDP_RPT_3_diff.yaml"},
+    ]
+
+    for case in cases:
+        run_diff_sweep(
+            case["case"], case_name=case["case_name"], diff_yaml_file=case["yaml_file"]
+        )
+
 
 if __name__ == "__main__":
-    # run_all_cases()
-    run_diff_sweep(RPT1, case_name="KBHDP_PT_2_diff", diff_yaml_file='KBHDP_PT_2_diff.yaml')
+    run_all_cases()
+    # run_all_diff_cases()
+    # run_diff_sweep(RPT1, case_name="KBHDP_RPT_1_diff", diff_yaml_file='KBHDP_RPT_1_diff.yaml')
+    # run_diff_sweep(RPT2, case_name="KBHDP_RPT2_diff", diff_yaml_file='KBHDP_RPT_2_diff.yaml')
     # run_case_sweep(SOA, case_name="KBHDP_SOA_1", yaml_file= 'KBHDP_SOA_1.yaml')
     # run_case_sweep(RPT2, case_name="KBHDP_RPT_2", yaml_file='KBHDP_RPT_2.yaml')
