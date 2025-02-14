@@ -229,7 +229,7 @@ def build_vagmd_flowsheet(
         initialize=100,
         bounds=(0, None),
         units=pyunits.kWh / pyunits.m**3,
-        doc="Specific thermal power consumption (kWh/m3)",
+        doc="Specific batch thermal power consumption (kWh/m3)",
     )
 
     m.fs.specific_energy_consumption_electric = Var(

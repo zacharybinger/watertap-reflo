@@ -132,28 +132,28 @@ RPT1_diff_analysis:
       group: Cost
       y_convert: 1
       num_samples: 5
-    PV Fixed Operating Cost:
-      diff_mode: percentile
-      diff_sample_type: UniformSample
-      param: fs.energy.costing.pv_surrogate.fixed_operating_by_capacity
-      nominal_lb: 15
-      nominal_ub: 30
-      relative_lb: -0.01
-      relative_ub: -0.01
-      group: Cost
-      y_convert: 1
-      num_samples: 5
-    PV Land Cost:
-      diff_mode: percentile
-      diff_sample_type: UniformSample
-      param: fs.energy.costing.pv_surrogate.land_cost_per_acre
-      nominal_lb: 2000
-      nominal_ub: 4000
-      relative_lb: -0.01
-      relative_ub: -0.01
-      group: Cost
-      y_convert: 1
-      num_samples: 5
+    # PV Fixed Operating Cost:
+    #   diff_mode: percentile
+    #   diff_sample_type: UniformSample
+    #   param: fs.energy.costing.pv_surrogate.fixed_operating_by_capacity
+    #   nominal_lb: 15
+    #   nominal_ub: 30
+    #   relative_lb: -0.01
+    #   relative_ub: -0.01
+    #   group: Cost
+    #   y_convert: 1
+    #   num_samples: 5
+    # PV Land Cost:
+    #   diff_mode: percentile
+    #   diff_sample_type: UniformSample
+    #   param: fs.energy.costing.pv_surrogate.land_cost_per_acre
+    #   nominal_lb: 2000
+    #   nominal_ub: 4000
+    #   relative_lb: -0.01
+    #   relative_ub: -0.01
+    #   group: Cost
+    #   y_convert: 1
+    #   num_samples: 5
     Brine Injection Cost:
       diff_mode: percentile
       diff_sample_type: UniformSample
@@ -206,16 +206,16 @@ RPT1_diff_analysis:
         param: fs.energy.costing.pv_surrogate.cost_per_watt_installed
         lower_limit: 0.5
         upper_limit: 1.5
-      PV Fixed Operating Cost:
-        type: UniformSample
-        param: fs.energy.costing.pv_surrogate.fixed_operating_by_capacity
-        lower_limit: 15
-        upper_limit: 30
-      PV Land Cost:
-        type: UniformSample
-        param: fs.energy.costing.pv_surrogate.land_cost_per_acre
-        lower_limit: 2000
-        upper_limit: 4000
+      # PV Fixed Operating Cost:
+      #   type: UniformSample
+      #   param: fs.energy.costing.pv_surrogate.fixed_operating_by_capacity
+      #   lower_limit: 15
+      #   upper_limit: 30
+      # PV Land Cost:
+      #   type: UniformSample
+      #   param: fs.energy.costing.pv_surrogate.land_cost_per_acre
+      #   lower_limit: 2000
+      #   upper_limit: 4000
       Brine Injection Cost:
         type: UniformSample
         param: fs.treatment.costing.deep_well_injection.dwi_lcow

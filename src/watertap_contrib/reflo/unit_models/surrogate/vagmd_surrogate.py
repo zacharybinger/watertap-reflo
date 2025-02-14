@@ -152,6 +152,13 @@ class VAGMDData(VAGMDBaseData):
             units=pyunits.dimensionless,
             doc="Recovery ratio",
         )
+        
+        self.specific_energy_consumption_thermal = Var(
+            initialize=70,
+            bounds=(0, 150),
+            units=pyunits.kWh / pyunits.m**3,
+            doc="SEC Thermal (kWh/m3)",
+        )
 
         @self.Constraint(doc="Calculate recovery ratio")
         def eqn_recovery_ratio(b):
@@ -169,9 +176,9 @@ class VAGMDData(VAGMDBaseData):
                 to_units=pyunits.dimensionless,
             )
 
-        @self.Expression(doc="Calculate specific thermal energy consumption (kWh/m3)")
-        def specific_energy_consumption_thermal(b):
-            return b.thermal_power / pyunits.convert(
+        @self.Constraint(doc="Calculate specific thermal energy consumption (kWh/m3)")
+        def eq_specific_energy_consumption_thermal(b):
+            return b.specific_energy_consumption_thermal == b.thermal_power / pyunits.convert(
                 b.permeate_flux * b.module_area, to_units=pyunits.m**3 / pyunits.h
             )
 
@@ -206,6 +213,9 @@ class VAGMDData(VAGMDBaseData):
 
         if iscale.get_scaling_factor(self.recovery_ratio) is None:
             iscale.set_scaling_factor(self.recovery_ratio, 1e1)
+
+        if iscale.get_scaling_factor(self.specific_energy_consumption_thermal) is None:
+            iscale.set_scaling_factor(self.specific_energy_consumption_thermal, 1e-2)
 
     def initialize_build(
         self,

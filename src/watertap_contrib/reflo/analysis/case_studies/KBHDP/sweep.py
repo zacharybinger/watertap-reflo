@@ -106,8 +106,8 @@ def run_all_diff_cases():
 
 
 if __name__ == "__main__":
-    run_all_cases()
-    # run_all_diff_cases()
+    # run_all_cases()
+    run_all_diff_cases()
     # run_diff_sweep(RPT1, case_name="KBHDP_RPT_1_diff", diff_yaml_file='KBHDP_RPT_1_diff.yaml')
     # run_diff_sweep(RPT2, case_name="KBHDP_RPT2_diff", diff_yaml_file='KBHDP_RPT_2_diff.yaml')
     # run_case_sweep(SOA, case_name="KBHDP_SOA_1", yaml_file= 'KBHDP_SOA_1.yaml')

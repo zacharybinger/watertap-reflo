@@ -178,11 +178,13 @@ class VAGMDBaseData(InitializationMixin, UnitModelBlockData):
             doc="Cooling water volumetric flow rate, fixed to 1265L/h, to maintain vacuum pressure inside the MD module around 200 mbar",
         )
 
-        self.thermal_heat_transfer_coeff = Param(
+        self.thermal_heat_transfer_coeff = Var(
             initialize=3168,
             units=pyunits.W / pyunits.m**2 / pyunits.K,
             doc="Overall heat transfer coefficient",
         )
+
+        self.thermal_heat_transfer_coeff.fix(3168)
 
         self.cooling_flow_pressure_drop = Param(
             initialize=170, units=pyunits.mbar, doc="Cooling flow pressure drop"

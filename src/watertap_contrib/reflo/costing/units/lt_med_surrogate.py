@@ -73,7 +73,7 @@ def build_lt_med_surrogate_cost_param_block(blk):
     )
 
     blk.cost_disposal_per_vol_brine = pyo.Var(
-        initialize=0.02,
+        initialize=0.0,
         units=costing.base_currency / pyo.units.m**3,
         bounds=(0, None),
         doc="Cost of disposal per m3 brine",

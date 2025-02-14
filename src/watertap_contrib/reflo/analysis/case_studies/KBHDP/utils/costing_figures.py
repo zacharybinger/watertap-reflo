@@ -160,11 +160,13 @@ def create_sweep_cost_breakdown(
     save_path = os.path.join(parent_dir, "figures")
 
     import_data(costing_data)
-
     print(costing_data.directory_keys)
     print(costing_data.data_keys)
+
+    # assert False
     x_var = costing_data.directory_keys[0].split('/')[-1]
 
+    # assert False
 
     """ define the base costing block and flow (This is used to normalize LCOW)
     the costing block is used to pull out default values for cost of 
@@ -193,17 +195,16 @@ def create_sweep_cost_breakdown(
     cost_plotter = breakDownPlotter(
         costing_data,
         save_location=save_path,
-        save_name=save_name + "_" + x_var,
+        save_name=save_name + "_" + x_var + '_final',
     )
-    print(save_name + "_" + x_var)
-
+    print(save_name + "_" + x_var + '_final')
+    print(x_var)
     """ define the costing groups, this will be order they are plotted in"""
     ## This is why the rest of the device groups aren't showing up
     cost_plotter.define_area_groups(list(device_groups.keys()))
     """ define if you want to plot specific groups, for example CAPEX, OPEX or TOTAl isstead"""
     cost_plotter.define_hatch_groups({"CAPEX": {"hatch": ""}, "OPEX": {"hatch": "//"}})
 
-    print(x_var)
     y_max = np.ceil(
         np.array(costing_data[costing_data.directory_keys[0], "LCOT"].data).max()
     )
@@ -259,7 +260,10 @@ def create_case_figures(case_name=None, sweep_file=None, device_groups=None):
             for file in files:
                 file_id = file.split("_")
                 case_id = case_name.split("_")
+                print('\n')
+                print(file_id, case_id, file)
                 if file_id[:3] == case_id[:3]:
+                    print('    ',file_id[:3], case_id[:3])
                     print(f"\n\nCreating Figures for {file} sweep\n\n")
                     if file_id[-1] == 'map.h5':
                         costing_data = psDataManager(os.path.join(sweep_results_dir, file))
@@ -274,10 +278,11 @@ def create_case_figures(case_name=None, sweep_file=None, device_groups=None):
                                           show=True)
                     else:
                         costing_data = psDataManager(os.path.join(sweep_results_dir, file))
+                        print(device_groups, case_name)
                         create_sweep_cost_breakdown(
                             costing_data, device_groups=device_groups, save_name=case_name
                         )
-                        # pass
+                #         # pass
 
 # def create_map_figures(file, file_id = None, case_id = None, device_groups=None, save_name=None):
 #     costing_data = psDataManager(os.path.join(sweep_results_dir, file))
@@ -413,12 +418,12 @@ def create_map_figure(
 
 
 def create_all_figures():
-    create_case_figures(
-        case_name="KBHDP_SOA_1", device_groups=figure_device_groups["KBHDP_SOA_1"]
-    )
     # create_case_figures(
-    #     case_name="KBHDP_RPT_1", device_groups=figure_device_groups["KBHDP_RPT_1"]
+    #     case_name="KBHDP_SOA_1", device_groups=figure_device_groups["KBHDP_SOA_1"]
     # )
+    create_case_figures(
+        case_name="KBHDP_RPT_1", device_groups=figure_device_groups["KBHDP_RPT_1"]
+    )
     # create_case_figures(
     #     case_name="KBHDP_RPT_2", device_groups=figure_device_groups["KBHDP_RPT_2"]
     # )

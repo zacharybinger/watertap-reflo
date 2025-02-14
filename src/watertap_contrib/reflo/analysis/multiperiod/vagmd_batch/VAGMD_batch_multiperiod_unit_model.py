@@ -18,6 +18,7 @@ import numpy as np
 from pyomo.environ import (
     Var,
     Constraint,
+    NonNegativeReals,
     value,
     units as pyunits,
 )
@@ -30,11 +31,13 @@ from idaes.core import (
     UnitModelCostingBlock,
     useDefault,
 )
+from idaes.core.util.misc import add_object_reference
 from idaes.core.util.exceptions import (
     ConfigurationError,
 )
 import idaes.core.util.scaling as iscale
 import idaes.logger as idaeslog
+from idaes.core.util.model_statistics import degrees_of_freedom
 from idaes.apps.grid_integration.multiperiod.multiperiod import MultiPeriodModel
 
 # WaterTAP imports
@@ -87,6 +90,94 @@ def get_vagmd_batch_variable_pairs(t1, t2):
         (t1.fs.vagmd.feed_pump_power_elec, t2.fs.pre_feed_pump_power_elec),
         (t1.fs.vagmd.cooling_pump_power_elec, t2.fs.pre_cooling_pump_power_elec),
     ]
+
+def add_mp_constraints(mp):
+    active_blks = mp.get_active_process_blocks()
+    print('\n\n\n')
+    print(f"Before add_mp_constraints")
+    print(f'DOF = {degrees_of_freedom(mp)}')
+
+    # if degrees_of_freedom(mp) != 0:
+    #     print('Degrees of freedom not zero')
+    #     assert False
+
+    # mp.gain_output_ratio = Var(
+    #     initialize=10,
+    #     units=pyunits.dimensionless,
+    #     domain=NonNegativeReals,
+    #     doc="Gain output ratio",
+    # )
+
+    mp.specific_energy_consumption_thermal = Var(
+        initialize=68.5,
+        bounds=(10, 150),
+        units=pyunits.kWh / pyunits.m**3,
+        domain=NonNegativeReals,
+        doc="Specific thermal power consumption (kWh/m3)",
+    )
+
+    # mp.thermal_heat_transfer_coeff = Var(
+    #     initialize=3168,
+    #     units=pyunits.W / pyunits.m**2 / pyunits.K,
+    #     doc="The effectiveness of the heat exchanger",
+    # )
+
+    # mp.thermal_heat_transfer_coeff.fix()
+
+    # mp.gain_output_ratio.fix(9.6)
+    mp.specific_energy_consumption_thermal.fix(70)
+    # mp.effectiveness_heat_exchanger.fix(0.9)
+
+    print(f"After defining vars")
+    print(f'DOF = {degrees_of_freedom(mp)}')
+
+    for blk in active_blks:
+        # print(f'\n\n\n Inside {blk}')
+        # print(blk)
+        # blk.fs.gain_output_ratio.display()
+        # blk.fs.specific_energy_consumption_thermal.display()
+        # blk.fs.vagmd.effectiveness_heat_exchanger.display()
+        # blk.fs.gain_output_ratio.unfix()
+        # blk.fs.vagmd.thermal_heat_transfer_coeff.unfix()
+        blk.fs.vagmd.permeate_flux.unfix()
+        blk.fs.vagmd.eq_permeate_flux.deactivate()
+        # blk.fs.specific_energy_consumption_thermal.unfix()
+        blk.fs.vagmd.specific_energy_consumption_thermal.unfix()
+
+        # blk.fs.vagmd.eq_effectiveness_heat_exchanger.deactivate()
+        # blk.fs.eq_gain_output_ratio.deactivate()
+        # blk.fs.specific_energy_consumption_thermal.unfix()
+        # blk.fs.vagmd.effectiveness_heat_exchanger.unfix()
+
+        # @blk.Constraint(doc="GOR")
+        # def eq_GOR(b):
+        #     # return b.fs.gain_output_ratio == 10
+        #     return b.fs.gain_output_ratio == mp.gain_output_ratio
+        
+        @blk.Constraint(doc="SEC Thermal")
+        def eq_SEC_th(b):
+            print(b.name)
+            print(b.fs.specific_energy_consumption_thermal.display())
+            print(b.fs.specific_energy_consumption_thermal.display())
+            return b.fs.vagmd.specific_energy_consumption_thermal == mp.specific_energy_consumption_thermal
+        
+
+        # @blk.Constraint(doc="The effectiveness of the heat exchanger")
+        # def eq_HX_eff(b):
+        #     return b.fs.vagmd.thermal_heat_transfer_coeff == mp.thermal_heat_transfer_coeff
+
+        # @mp.Constraint(doc="SEC_thermal")
+        # def eq_brine_disposal_cost(b):
+        #     return (b.process.fs.specific_energy_consumption_thermal == mp.specific_energy_consumption_thermal)
+        
+        # @mp.Constraint(doc="HX Effectiveness")
+        # def eq_brine_disposal_cost(b):
+        #     return (b.process.fs.vagmd.effectiveness_heat_exchanger == mp.effectiveness_heat_exchanger)
+
+        # mp.gain_output_ratio.fix(9.6)
+    
+    print(f"After unfixing Vars")
+    print(f'DOF = {degrees_of_freedom(mp)}')
 
 
 def unfix_dof(m, feed_flow_rate):
@@ -305,7 +396,7 @@ class VAGMDbatchSurrogateData(UnitModelBlockData):
             "evap_inlet_temp",
             "cond_inlet_temp",
             "feed_temp",
-            "feed_salinity",
+            # "feed_salinity",
             "initial_batch_volume",
             "recovery_ratio",
         ]
@@ -315,7 +406,7 @@ class VAGMDbatchSurrogateData(UnitModelBlockData):
             evap_inlet_temp,
             cond_inlet_temp,
             feed_temp,
-            feed_salinity,
+            # feed_salinity,
             initial_batch_volume,
             recovery_ratio,
         ]
@@ -325,7 +416,7 @@ class VAGMDbatchSurrogateData(UnitModelBlockData):
             [60, 80],
             [20, 30],
             [20, 30],
-            [35, max_allowed_brine_salinity[module_type]],
+            # [35, max_allowed_brine_salinity[module_type]],
             [50, float("inf")],
             [0, 1],
         ]
@@ -407,6 +498,8 @@ class VAGMDbatchSurrogateData(UnitModelBlockData):
             unfix_dof_options={"feed_flow_rate": feed_flow_rate},
         )
 
+        
+
         active_blks = mp.get_active_process_blocks()
 
         # Initialize and unfix dof for each period
@@ -419,6 +512,8 @@ class VAGMDbatchSurrogateData(UnitModelBlockData):
             result = solver.solve(blk)
             unfix_dof(m=blk, feed_flow_rate=feed_flow_rate)
 
+        add_mp_constraints(mp)
+        # assert False
         # Set-up for the first time period
         active_blks[0].fs.vagmd.feed_props[0].conc_mass_phase_comp["Liq", "TDS"].fix(
             feed_salinity
@@ -435,6 +530,8 @@ class VAGMDbatchSurrogateData(UnitModelBlockData):
         active_blks[0].fs.pre_cooling_pump_power_elec.fix(0)
         active_blks[0].fs.pre_feed_pump_power_elec.fix(0)
 
+        
+
         return mp
 
     def add_costing_module(self, flowsheet_costing_block):
@@ -449,6 +546,7 @@ class VAGMDbatchSurrogateData(UnitModelBlockData):
         vagmd.costing = UnitModelCostingBlock(
             flowsheet_costing_block=flowsheet_costing_block
         )
+        add_object_reference(self, "costing", vagmd.costing)
 
         # Overwrite the thermal and electric energy flow with the accumulated values
         vagmd.costing.costing_package.cost_flow(

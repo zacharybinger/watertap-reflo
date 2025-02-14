@@ -160,7 +160,7 @@ def fetch_file(file=None, yaml_file = None, case = None):
 
 
 
-def plot_voi(df):
+def plot_voi(df, filename=None):
     fig, ax = plt.subplots(figsize=(7,9))
     sns.boxplot(
         df,
@@ -199,11 +199,11 @@ def plot_voi(df):
         handleheight=1)
     
     plt.tight_layout()
-    # plt.savefig('test_VOI.svg', format='svg')
-    plt.savefig('test_VOI.png', format='png', dpi=300)
+    plt.savefig(f'{filename}.svg', format='svg')
+    plt.savefig(f'{filename}.png', format='png', dpi=300)
     plt.show()
 
-def main():
+def create_KBHDP():
     df1 = fetch_file(file = "diff_sweep_analysisType_RPT1_diff_analysis.h5", yaml_file="KBHDP_RPT_1_diff.yaml", case = "RPT1")
     df2 = fetch_file(file = "diff_sweep_analysisType_RPT2_diff_analysis.h5", yaml_file="KBHDP_RPT_2_diff.yaml", case = "RPT2")
     df3 = fetch_file(file = "diff_sweep_analysisType_RPT3_diff_analysis.h5", yaml_file="KBHDP_RPT_3_diff.yaml", case = "RPT3")
@@ -222,8 +222,33 @@ def main():
     df.drop(df[df['z-score'] > 2].index, inplace=True)
     print(df.head(10))
 
-    df.to_csv('test_VOI.csv')
-    plot_voi(df)
+    df.to_csv('KBHDP_VOI.csv')
+    plot_voi(df, filename='KBHDP_VOI')
+
+def create_Permian():
+    df1 = fetch_file(file = "diff_sweep_analysisType_RPT1_diff_analysis.h5", yaml_file="KBHDP_RPT_1_diff.yaml", case = "RPT1")
+    df2 = fetch_file(file = "diff_sweep_analysisType_RPT2_diff_analysis.h5", yaml_file="KBHDP_RPT_2_diff.yaml", case = "RPT2")
+    df3 = fetch_file(file = "diff_sweep_analysisType_RPT3_diff_analysis.h5", yaml_file="KBHDP_RPT_3_diff.yaml", case = "RPT3")
+    # df4 = fetch_file(file = "diff_sweep_analysisType_RPT1_diff_analysis.h5", yaml_file="KBHDP_RPT_1_diff.yaml", case = "ZLD")
+    df = pd.concat([df1, df2, df3])
+    # df = pd.concat([df1, df2, df3, df4])
+    # df = df3
+    df = df.sort_values(by=['Group', 'Case', 'Sweep'])
+
+
+    df['z-score'] = 0
+    for sweep in df['Sweep'].unique():
+        for case in df['Case'].unique():
+            df.loc[(df['Sweep'] == sweep) & (df['Case'] == case), 'z-score'] = np.abs(stats.zscore(df.loc[(df['Sweep'] == sweep) & (df['Case'] == case), 'VOI']))
+
+    df.drop(df[df['z-score'] > 2].index, inplace=True)
+    print(df.head(10))
+
+    df.to_csv('KBHDP_VOI.csv')
+    plot_voi(df, filename='KBHDP_VOI')
+
+def main():
+    create_KBHDP()
 
 
 if __name__ == "__main__":
