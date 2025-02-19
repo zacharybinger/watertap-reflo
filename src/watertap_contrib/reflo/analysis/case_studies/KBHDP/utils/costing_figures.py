@@ -51,8 +51,8 @@ def import_data(data_manager):
                 # "units": "%",
             },
             {
-                "filekey": "fs.costing.heat_cost_buy",
-                "return_key": "fs.costing.heat_cost_buy",
+                "filekey": "heat_cost_buy",
+                "return_key": "Heat Cost",
                 # "units": "USD/kWh",
             },
             {
@@ -134,6 +134,11 @@ def import_data(data_manager):
                 "filekey": "fs.treatment.costing.co2.cost",
                 "return_key": "CO2 Cost",
                 # "units": "USD/m**3",
+            },
+            {
+                "filekey": "fs.treatment.costing.mgcl2.cost",
+                "return_key": "MgCl2 Cost",
+                # "units": "USD/m**3",
             }
         ]
 
@@ -205,6 +210,14 @@ def create_sweep_cost_breakdown(
     """ define if you want to plot specific groups, for example CAPEX, OPEX or TOTAl isstead"""
     cost_plotter.define_hatch_groups({"CAPEX": {"hatch": ""}, "OPEX": {"hatch": "//"}})
 
+    print(cost_plotter.area_groups)
+    print(cost_plotter.hatch_groups)
+
+    cost_plotter._select_data(x_var, "levelized")
+    cost_plotter.selected_data = cost_plotter.psData.get_selected_data()
+    for group, items in cost_plotter.hatch_groups.items():
+        print(group, items)
+    # assert False
     y_max = np.ceil(
         np.array(costing_data[costing_data.directory_keys[0], "LCOT"].data).max()
     )
@@ -221,7 +234,7 @@ def create_sweep_cost_breakdown(
         cost_plotter.plotbreakdown(
             xdata=x_var,
             ydata=[
-                "cost_breakdown",
+                # "cost_breakdown",
                 "levelized",
             ],
             axis_options={
@@ -237,10 +250,7 @@ def create_sweep_cost_breakdown(
         x_axis_lims = np.linspace(xmin, xmax, 5)
         cost_plotter.plotbreakdown(
             xdata=x_var,
-            ydata=[
-                "cost_breakdown",
-                "levelized",
-            ],
+            ydata="levelized",
             axis_options={
                 "yticks": y_axis_lims,
                 # "yticks": [0, 0.25 ,0.5],  # adjust as needed
@@ -262,6 +272,7 @@ def create_case_figures(case_name=None, sweep_file=None, device_groups=None):
                 case_id = case_name.split("_")
                 print('\n')
                 print(file_id, case_id, file)
+                
                 if file_id[:3] == case_id[:3]:
                     print('    ',file_id[:3], case_id[:3])
                     print(f"\n\nCreating Figures for {file} sweep\n\n")
@@ -418,14 +429,17 @@ def create_map_figure(
 
 
 def create_all_figures():
-    # create_case_figures(
-    #     case_name="KBHDP_SOA_1", device_groups=figure_device_groups["KBHDP_SOA_1"]
-    # )
     create_case_figures(
-        case_name="KBHDP_RPT_1", device_groups=figure_device_groups["KBHDP_RPT_1"]
+        case_name="KBHDP_SOA_1", device_groups=figure_device_groups["KBHDP_SOA_1"]
     )
     # create_case_figures(
+    #     case_name="KBHDP_RPT_1", device_groups=figure_device_groups["KBHDP_RPT_1"]
+    # )
+    # create_case_figures(
     #     case_name="KBHDP_RPT_2", device_groups=figure_device_groups["KBHDP_RPT_2"]
+    # )
+    # create_case_figures(
+    #     case_name="KBHDP_RPT_3", device_groups=figure_device_groups["KBHDP_RPT_3"]
     # )
 
 

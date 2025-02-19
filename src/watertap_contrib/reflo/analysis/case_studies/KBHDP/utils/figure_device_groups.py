@@ -219,4 +219,54 @@ figure_device_groups = {
             },
         },
     },
+    "KBHDP_RPT_3": {
+        "Heat": {
+            "OPEX": {
+                "units": {
+                    "fs.costing.total_heat_operating_cost",
+                    #   "fs.costing.aggregate_flow_electricity_sold"
+                },
+            },
+        },
+        "Electricity": {
+            "OPEX": {
+                "units": {
+                    "fs.costing.aggregate_flow_electricity_purchased",
+                    #   "fs.costing.aggregate_flow_electricity_sold"
+                },
+            },
+        },
+        "Injection": {
+            "OPEX": {
+                "units": {"fs.treatment.dwi.unit.costing.variable_operating_cost"},
+            },
+        },
+        # "Pumps": {
+        #     "CAPEX": {
+        #         "units": {"fs.treatment.pump.costing.capital_cost"},
+        #     },
+        # },
+        "FPC": {
+            "CAPEX": {
+                "units": {"fs.energy.FPC.costing.capital_cost"},
+            },
+            "OPEX": {
+                "units": {
+                    "fs.energy.FPC.costing.fixed_operating_cost",
+                }
+            },
+        },
+        "MD": {
+            "CAPEX": {
+                "units": {
+                    "fs.treatment.md.unit.mp.blocks[26].process.fs.vagmd.costing.capital_cost",
+                },
+            },
+            "OPEX": {
+                "units": {
+                    "fs.treatment.md.unit.mp.blocks[26].process.fs.vagmd.costing.fixed_operating_cost",
+                },
+            },
+        },
+    },
 }
