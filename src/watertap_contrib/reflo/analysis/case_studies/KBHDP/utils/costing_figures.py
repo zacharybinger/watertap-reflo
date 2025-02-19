@@ -240,6 +240,7 @@ def create_sweep_cost_breakdown(
                 "xticks": costing_data[costing_data.directory_keys[0], x_var].data,
             },
             legend_loc="upper right",
+            legend_cols=3,
             generate_figure=True,
         )
     else:
@@ -257,6 +258,7 @@ def create_sweep_cost_breakdown(
                 "xticks": x_axis_lims,
             },
             legend_loc="upper right",
+            legend_cols=3,
             generate_figure=True,
         )
 
@@ -455,12 +457,12 @@ def create_all_figures():
     # create_case_figures(
     #     case_name="KBHDP_SOA_1", device_groups=figure_device_groups["KBHDP_SOA_1"]
     # )
-    create_case_figures(
-        case_name="KBHDP_RPT_1", device_groups=figure_device_groups["KBHDP_RPT_1"]
-    )
     # create_case_figures(
-    #     case_name="KBHDP_RPT_2", device_groups=figure_device_groups["KBHDP_RPT_2"]
+    #     case_name="KBHDP_RPT_1", device_groups=figure_device_groups["KBHDP_RPT_1"]
     # )
+    create_case_figures(
+        case_name="KBHDP_RPT_2", device_groups=figure_device_groups["KBHDP_RPT_2"]
+    )
 
 
 if __name__ == "__main__":
