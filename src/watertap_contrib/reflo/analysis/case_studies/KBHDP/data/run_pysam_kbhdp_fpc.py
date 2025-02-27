@@ -19,6 +19,17 @@ import multiprocessing
 from itertools import product
 import matplotlib.pyplot as plt
 import PySAM.Swh as swh
+import seaborn as sns
+from idaes.core.solvers import get_solver
+from pyomo.environ import ConcreteModel, check_optimal_termination, units as pyunits
+from idaes.core import FlowsheetBlock
+from watertap_contrib.reflo.solar_models.surrogate.flat_plate.flat_plate_surrogate import (
+    FlatPlateSurrogate,
+)
+from idaes.core.util.scaling import *
+
+# from watertap_contrib.reflo.analysis.case_studies.KBHDP.components.FPC import *
+from idaes.core.util.model_statistics import *
 
 __all__ = [
     "read_module_datafile",
@@ -123,7 +134,18 @@ def setup_model(
     return tech_model
 
 
-def run_model(tech_model, heat_load_mwt=None, hours_storage=None, temperature_hot=None):
+def run_model(
+    tech_model,
+    heat_load_mwt=None,
+    hours_storage=24,
+    temperature_hot=80,
+    temp_lb_thresh=0.5,
+    temp_ub_thresh=None,
+    scaled_draw_min=1,
+    num_scaled_draw_pts=200,
+    temp_frac=0.05,
+    return_tech_model=False,
+):
     """
     :param tech_model: PySAM technology model
     :param heat_load_mwt: [MWt]
@@ -138,6 +160,9 @@ def run_model(tech_model, heat_load_mwt=None, hours_storage=None, temperature_ho
 
     T_cold = tech_model.value("custom_mains")[0]  # [C]
     heat_load = heat_load_mwt * 1e3 if heat_load_mwt is not None else None  # [kWt]
+
+    if temp_ub_thresh is None:
+        temp_ub_thresh = temp_lb_thresh
 
     print(
         f"Running:\n\tHeat Load = {heat_load_mwt}\n\tHours Storage = {hours_storage}\n\tTemperature Hot = {temperature_hot}"
@@ -176,7 +201,12 @@ def run_model(tech_model, heat_load_mwt=None, hours_storage=None, temperature_ho
     mdot_hot = (
         tech_model.value("system_capacity") / (cp_water * (T_hot - T_cold)) * 3600
     )  # [kg/hr]
-    tech_model.value("scaled_draw", 8760 * (mdot_hot,))  # [kg/hr]
+    T_tank_max = T_hot * (1 + temp_frac)
+    if T_tank_max > 99:
+        T_tank_max = 99
+    tech_model.value(
+        "T_tank_max", T_tank_max
+    )  # [C], max tank temperature is the temperature we want
 
     # Set pipe diameter and pump power
     pipe_length = pipe_length_fixed + pipe_length_per_collector * tech_model.value(
@@ -186,30 +216,81 @@ def run_model(tech_model, heat_load_mwt=None, hours_storage=None, temperature_ho
     pumping_power = pump_power_per_collector * tech_model.value("ncoll")
     tech_model.value("pump_power", pumping_power)  # [W]
 
-    tech_model.execute()
+    assert tech_model.value("T_set") == temperature_hot
+
+    sd = scaled_draw_min
+    lb = temperature_hot - temp_lb_thresh
+    ub = temperature_hot + temp_ub_thresh
+    increment = mdot_hot / num_scaled_draw_pts
+    num_runs = 0
+
+    # while not lb < temp_delivered < ub:
+    for sd in np.linspace(scaled_draw_min, mdot_hot, num_scaled_draw_pts):
+        tech_model.value("scaled_draw", 8760 * (sd,))
+        tech_model.execute()
+        temp_delivered = np.mean(tech_model.Outputs.T_deliv)
+        num_runs += 1
+
+        if temp_delivered < lb:
+            break
+        if lb < temp_delivered < ub:
+            break
+
+    if not lb < temp_delivered < ub:
+        # scaled draw interval was probably high
+        # rerun again with 10x more points
+        for sd in np.linspace(scaled_draw_min, mdot_hot, num_scaled_draw_pts * 100):
+
+            tech_model.value("scaled_draw", 8760 * (sd,))
+            tech_model.execute()
+            temp_delivered = np.mean(tech_model.Outputs.T_deliv)
+            num_runs += 1
+
+            if temp_delivered < lb:
+                break
+            if lb < temp_delivered < ub:
+                break
+
+    if not lb < temp_delivered < ub:
+        msg = f"Final design results in delivered temperature that is outside the bounds.\n"
+        msg += (
+            f"For {heat_load_mwt} MW, {hours_storage} hrs storage, {temperature_hot} C:"
+        )
+        msg += f"Delivered temperature {temp_delivered:.2f} C is not between {lb:.2f} C and {ub:.2f} C with scaled_draw {sd:.2f} kg/hr.\n"
+        msg += "Try setting more num_scaled_draw_pts and rerunning."
+        raise RuntimeError(msg)
 
     heat_annual = tech_model.value(
         "annual_Q_deliv"
     )  # [kWh] does not include electric heat, includes losses
-    electricity_annual = sum(tech_model.value("P_pump"))  # [kWh]
+    electricity_annual = sum(tech_model.value("P_pump")) + sum(
+        tech_model.Outputs.Q_aux
+    )  # [kWh]
     frac_electricity_annual = (
         electricity_annual / heat_annual
     )  # [-] for analysis only, plant beneficial if < 1
 
-    return {
+    results = {
         "heat_annual": heat_annual,  # [kWh] annual net thermal energy in year 1
         "electricity_annual": electricity_annual,  # [kWhe]
+        "system_capacity_actual": system_capacity_actual,
+        "scaled_draw": np.mean(tech_model.Outputs.draw),
+        "temperature_delivered": np.mean(tech_model.Outputs.T_deliv),
     }
 
+    if return_tech_model:
+        return results, tech_model
+    else:
+        return results
 
-def setup_and_run(
-    temperatures, weather_file, config_data, heat_load, hours_storage, temperature_hot
-):
+
+def setup_and_run(temperatures, weather_file, config_data, heat_load):
 
     tech_model = setup_model(
         temperatures, weather_file=weather_file, config_data=config_data
     )
-    result = run_model(tech_model, heat_load, hours_storage, temperature_hot)
+    result = run_model(tech_model, heat_load)
+
     return result
 
 
@@ -278,48 +359,56 @@ def plot_2d(df, x_label, y_label, units=None):
 
 
 def plot_contours(df):
-    plot_contour(
-        df.query("temperature_hot == 70"),
-        "heat_load",
-        "hours_storage",
-        "heat_annual",
-        units=["MWt", "hr", "kWht"],
-    )
-    plot_contour(
-        df.query("hours_storage == 12"),
-        "heat_load",
-        "temperature_hot",
-        "heat_annual",
-        units=["MWt", "C", "kWht"],
-    )
-    plot_contour(
-        df.query("heat_load == 500"),
-        "hours_storage",
-        "temperature_hot",
-        "heat_annual",
-        units=["hr", "C", "kWht"],
-    )
-    plot_contour(
-        df.query("temperature_hot == 70"),
-        "heat_load",
-        "hours_storage",
-        "electricity_annual",
-        units=["MWt", "hr", "kWhe"],
-    )
-    plot_contour(
-        df.query("hours_storage == 12"),
-        "heat_load",
-        "temperature_hot",
-        "electricity_annual",
-        units=["MWt", "C", "kWhe"],
-    )
-    plot_contour(
-        df.query("heat_load == 500"),
-        "hours_storage",
-        "temperature_hot",
-        "electricity_annual",
-        units=["hr", "C", "kWhe"],
-    )
+    for heat_load in df["heat_load"].unique():
+        plot_contour(
+            df.query(f"heat_load == {heat_load}"),
+            "hours_storage",
+            "temperature_hot",
+            "heat_annual",
+            units=["hr", "C", "kWht"],
+        )
+    # plot_contour(
+    #     df.query("temperature_hot == 70"),
+    #     "heat_load",
+    #     "hours_storage",
+    #     "heat_annual",
+    #     units=["MWt", "hr", "kWht"],
+    # )
+    # plot_contour(
+    #     df.query("hours_storage == 12"),
+    #     "heat_load",
+    #     "temperature_hot",
+    #     "heat_annual",
+    #     units=["MWt", "C", "kWht"],
+    # )
+    # plot_contour(
+    #     df.query("heat_load == 500"),
+    #     "hours_storage",
+    #     "temperature_hot",
+    #     "heat_annual",
+    #     units=["hr", "C", "kWht"],
+    # )
+    # plot_contour(
+    #     df.query("temperature_hot == 70"),
+    #     "heat_load",
+    #     "hours_storage",
+    #     "electricity_annual",
+    #     units=["MWt", "hr", "kWhe"],
+    # )
+    # plot_contour(
+    #     df.query("hours_storage == 12"),
+    #     "heat_load",
+    #     "temperature_hot",
+    #     "electricity_annual",
+    #     units=["MWt", "C", "kWhe"],
+    # )
+    # plot_contour(
+    #     df.query("heat_load == 500"),
+    #     "hours_storage",
+    #     "temperature_hot",
+    #     "electricity_annual",
+    #     units=["hr", "C", "kWhe"],
+    # )
 
 
 def plot_3ds(df):
@@ -368,9 +457,13 @@ def plot_3ds(df):
 
 
 def run_pysam_kbhdp_fpc(
-    heat_loads=np.linspace(1, 25, 25),
-    hours_storages=np.linspace(0, 12, 13),
-    temperature_hots=np.arange(50, 102, 2),
+    heat_loads=np.geomspace(0.5, 200, 50),
+    # heat_loads = np.power(10, np.linspace(np.log10(0.1), np.log10(200), 100)),
+    # heat_loads = np.exp(np.linspace(np.log(0.1), np.log(200), 100)),
+    # hours_storages=np.linspace(10, 14, 4),
+    # temperature_hots=np.arange(90, 98, 2),
+    hours_storage=24,
+    temperature_hot=80,
     temperature_cold=20,
     plot_saved_dataset=False,
     run_pysam=True,
@@ -391,7 +484,8 @@ def run_pysam_kbhdp_fpc(
         "T_amb": 18,
     }
 
-    dataset_filename = os.path.join(os.path.dirname(__file__), dataset_filename)
+    # dataset_filename = os.path.join(os.path.dirname(__file__), dataset_filename)
+    dataset_filename = "/Users/zbinger/watertap-reflo/src/watertap_contrib/reflo/analysis/case_studies/KBHDP/data/fpc/final_fpc_surrogate.pkl"
     config_data = read_module_datafile(param_file)
 
     if "solar_resource_file" in config_data:
@@ -406,10 +500,8 @@ def run_pysam_kbhdp_fpc(
     data = []
     if run_pysam:
         if use_multiprocessing:
-            arguments = list(product(heat_loads, hours_storages, temperature_hots))
-            df = pd.DataFrame(
-                arguments, columns=["heat_load", "hours_storage", "temperature_hot"]
-            )
+            arguments = list(product(heat_loads))
+            df = pd.DataFrame(arguments, columns=["heat_load"])
 
             time_start = time.process_time()
             with multiprocessing.Pool(processes=6) as pool:
@@ -420,7 +512,6 @@ def run_pysam_kbhdp_fpc(
                 results = pool.starmap(setup_and_run, args)
             time_stop = time.process_time()
             print("Multiprocessing time:", time_stop - time_start, "\n")
-
             df_results = pd.DataFrame(results)
             df = pd.concat(
                 [
@@ -435,31 +526,150 @@ def run_pysam_kbhdp_fpc(
                 axis=1,
             )
         else:
-            comb = [
-                (hl, hs, th)
-                for hl in heat_loads
-                for hs in hours_storages
-                for th in temperature_hots
-            ]
-            for heat_load, hours_storage, temperature_hot in comb:
-                result = run_model(
-                    tech_model, heat_load, hours_storage, temperature_hot
-                )
+            comb = [(heat_loads)]
+            for (heat_load,) in comb:
+                result = run_model(tech_model, heat_load)
                 data.append(
                     [
                         heat_load,
-                        hours_storage,
-                        temperature_hot,
                         result["heat_annual"],
                         result["electricity_annual"],
                     ]
                 )
             df = pd.DataFrame(data, columns=["heat_annual", "electricity_annual"])
 
+        # f = sns.scatterplot(data=df,x="heat_load", y="heat_annual",)
+        # plt.show()
+
         if save_data:
             df.to_pickle(dataset_filename)
 
+        return df
+
+
+def train_surrogate():
+
+    # heat_loads=np.linspace(1, 150, 10),
+    # hours_storages=np.linspace(10, 14, 4),
+    # temperature_hots=np.arange(90, 102, 2),
+
+    input_bounds = dict(heat_load=[0.5, 200])
+    input_units = dict(heat_load="MW", hours_storage="hour", temperature_hot="degK")
+    input_variables = {
+        "labels": ["heat_load"],
+        "bounds": input_bounds,
+        "units": input_units,
+    }
+
+    output_units = dict(heat_annual="kWh", electricity_annual="kWh")
+    output_variables = {
+        "labels": ["heat_annual", "electricity_annual"],
+        "units": output_units,
+    }
+    dataset_filename = "/Users/zbinger/watertap-reflo/src/watertap_contrib/reflo/analysis/case_studies/KBHDP/data/fpc/final_fpc_surrogate.pkl"
+
+    m = ConcreteModel()
+    m.fs = FlowsheetBlock(dynamic=False)
+    m.fs.FPC = FlatPlateSurrogate(
+        dataset_filename=dataset_filename,
+        input_variables=input_variables,
+        output_variables=output_variables,
+        surrogate_filename_save=dataset_filename.replace(".pkl", ""),
+        scale_training_data=False,
+    )
+
+
+def test_surrogate(df):
+    solver = get_solver()
+
+    input_bounds = dict(heat_load=[0.5, 200])
+    input_units = dict(heat_load="MW", hours_storage="hour", temperature_hot="degK")
+    input_variables = {
+        "labels": ["heat_load"],
+        "bounds": input_bounds,
+        "units": input_units,
+    }
+
+    output_units = dict(heat_annual="kWh", electricity_annual="kWh")
+    output_variables = {
+        "labels": ["heat_annual", "electricity_annual"],
+        "units": output_units,
+    }
+
+    dataset_filename = "/Users/zbinger/watertap-reflo/src/watertap_contrib/reflo/analysis/case_studies/KBHDP/data/fpc/final_fpc_surrogate.pkl"
+
+    heat_annuals = []
+    for index, row in df.iterrows():
+        print("\n\n")
+        heat_load_scale = np.log10(row["heat_load"])
+        heat_annual_scale = np.log10(row["heat_annual"])
+        m = ConcreteModel()
+        m.fs = FlowsheetBlock(dynamic=False)
+        m.fs.FPC = FlatPlateSurrogate(
+            surrogate_model_file="/Users/zbinger/watertap-reflo/src/watertap_contrib/reflo/analysis/case_studies/KBHDP/data/fpc/final_fpc_surrogate.json",
+            dataset_filename=dataset_filename,
+            input_variables=input_variables,
+            output_variables=output_variables,
+            scale_training_data=False,
+        )
+        print(f'Fixing Heat Load to {row["heat_load"]}, expecting {row["heat_annual"]}')
+        m.fs.FPC.heat_load.fix(row["heat_load"])
+        set_scaling_factor(m.fs.FPC.heat_load, 10**heat_load_scale)
+        set_scaling_factor(m.fs.FPC.heat_annual, 10**heat_annual_scale)
+        print(f"Degrees of Freedom (m): {degrees_of_freedom(m)}")
+        print(f"Degrees of Freedom (FPC): {degrees_of_freedom(m.fs.FPC)}")
+        # m.fs.FPC.initialize()
+        results = solver.solve(m)
+        # heat_annuals.append(m.fs.FPC.heat_annual.value)
+        if check_optimal_termination(results):
+            print("\n--------- OPTIMAL SOLVE!!! ---------\n")
+            heat_annuals.append(m.fs.FPC.heat_annual.value)
+            # print(f'{f"Heat Load":<20s} {m.fs.FPC.heat_load.value:<10.2f}{f"{str(pyunits.get_units(m.fs.FPC.heat_load)):<10s}"}')
+            # print(f'{f"Hours Storage":<20s} {m.fs.FPC.hours_storage.value:<10.2f}{f"{str(pyunits.get_units(m.fs.FPC.hours_storage)):<10s}"}')
+            # print(f'{f"Temperature Hot":<20s} {m.fs.FPC.temperature_hot.value:<10.2f}{f"{str(pyunits.get_units(m.fs.FPC.temperature_hot)):<10s}"}')
+            # print(f'{f"Heat Annual":<20s} {m.fs.FPC.heat_annual.value:<10.2f}{f"{str(pyunits.get_units(m.fs.FPC.heat_annual)):<10s}"}')
+            # print(f'{f"Electricity Annual":<20s} {m.fs.FPC.electricity_annual.value:<10.2f}{f"{str(pyunits.get_units(m.fs.FPC.electricity_annual)):<10s}"}')
+        else:
+            assert False
+
+    df["predicted_heat_annual"] = heat_annuals
+    print(df)
+
+    g = sns.scatterplot(
+        data=df,
+        x="heat_annual",
+        y="predicted_heat_annual",
+    )
+    g = plt.plot(
+        [0, max(df["heat_annual"])],
+        [0, max(df["heat_annual"])],
+        linestyle="--",
+        color="red",
+    )
+
+    return df
+
 
 if __name__ == "__main__":
+    df = run_pysam_kbhdp_fpc()
+    # print(df)
+    train_surrogate()
+    test_surrogate(df)
+    # # Plot the lines on two facets
+    # g = sns.relplot(
+    #     data=df,
+    #     x="heat_load", y="heat_annual",
+    #     hue="temperature_hot", col="hours_storage",
+    #     kind="scatter", palette="deep",
+    #     height=5, aspect=.75, facet_kws=dict(sharex=False),
+    # )
 
-    run_pysam_kbhdp_fpc(dataset_filename="test.pkl")
+    # g = sns.relplot(
+    #     data=df,
+    #     x="heat_load", y="predicted_heat_annual",
+    #     hue="temperature_hot", col="hours_storage",
+    #     kind="scatter", palette="deep",
+    #     height=5, aspect=.75, facet_kws=dict(sharex=False),
+    # )
+
+    plt.show()

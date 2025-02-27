@@ -50,12 +50,7 @@ parent_dir = os.path.abspath(os.path.join(__location__, ".."))
 weather_file = os.path.join(parent_dir, "el_paso_texas-KBHDP-weather.csv")
 param_file = os.path.join(parent_dir, "swh-kbhdp.json")
 dataset_filename = os.path.join(parent_dir, "data/FPC_KBHDP_el_paso.pkl")
-surrogate_filename = os.path.join(
-    parent_dir,
-    # "data/FPC_KBHDP_el_paso_MID_heat_load_1-25_hours_storage_0-24_temperature_hot_50-100.json")
-    # "data/FPC_KBHDP_el_paso_HIGH_heat_load_1-50_hours_storage_0-24_temperature_hot_50-100.json"
-    "data/FPC_KBHDP_el_paso_REALLY_HIGH_heat_load_1-100_hours_storage_0-24_temperature_hot_50-100.json",
-)
+surrogate_filename = "/Users/zbinger/watertap-reflo/src/watertap_contrib/reflo/analysis/case_studies/KBHDP/data/fpc/final_fpc_surrogate.json"
 
 
 def build_system():
@@ -76,28 +71,26 @@ def build_fpc(m):
 
     print(f'\n{"=======> BUILDING FPC SYSTEM <=======":^60}\n')
 
-    input_bounds = dict(
-        heat_load=[1, 100], hours_storage=[0, 24], temperature_hot=[50, 102]
-    )
-    input_units = dict(heat_load="MW", hours_storage="hour", temperature_hot="degK")
+    input_bounds = dict(heat_load=[0.5, 200])
+    input_units = dict(heat_load="MW")
     input_variables = {
-        "labels": ["heat_load", "hours_storage", "temperature_hot"],
+        "labels": ["heat_load"],
         "bounds": input_bounds,
         "units": input_units,
     }
 
-    output_units = dict(heat_annual_scaled="kWh", electricity_annual_scaled="kWh")
+    output_units = dict(heat_annual="kWh", electricity_annual="kWh")
     output_variables = {
-        "labels": ["heat_annual_scaled", "electricity_annual_scaled"],
+        "labels": ["heat_annual", "electricity_annual"],
         "units": output_units,
     }
 
     energy.FPC = FlatPlateSurrogate(
-        surrogate_model_file=surrogate_filename,
+        surrogate_model_file="/Users/zbinger/watertap-reflo/src/watertap_contrib/reflo/analysis/case_studies/KBHDP/data/fpc/final_fpc_surrogate.json",
         dataset_filename=dataset_filename,
         input_variables=input_variables,
         output_variables=output_variables,
-        scale_training_data=True,
+        scale_training_data=False,
     )
 
 
@@ -113,12 +106,12 @@ def set_fpc_op_conditions(m, hours_storage=12, temperature_hot=80):
     energy = m.fs.energy
     # energy.FPC.load_surrogate()
 
-    energy.FPC.hours_storage.fix(hours_storage)
-    # Assumes the hot temperature to the inlet of a 'MD HX'
-    energy.FPC.temperature_hot.fix(temperature_hot)
+    # energy.FPC.hours_storage.fix(hours_storage)
+    # # Assumes the hot temperature to the inlet of a 'MD HX'
+    # energy.FPC.temperature_hot.fix(temperature_hot)
     # Assumes the cold temperature from the outlet temperature of a 'MD HX'
-    energy.FPC.temperature_cold.set_value(20)
-    energy.FPC.heat_load.fix(99)
+    # energy.FPC.temperature_cold.set_value(20)
+    energy.FPC.heat_load.fix(10)
 
 
 def add_fpc_costing(m, costing_block=None):
@@ -132,8 +125,8 @@ def add_fpc_costing(m, costing_block=None):
 
 
 def add_FPC_scaling(m, blk):
-    set_scaling_factor(blk.heat_annual_scaled, 1e-8)
-    set_scaling_factor(blk.electricity_annual_scaled, 1e-2)
+    # set_scaling_factor(blk.heat_annual_scaled, 1e-8)
+    # set_scaling_factor(blk.electricity_annual_scaled, 1e-2)
     set_scaling_factor(blk.heat_load, 1e-6)
     set_scaling_factor(blk.hours_storage, 1 / 10)
 

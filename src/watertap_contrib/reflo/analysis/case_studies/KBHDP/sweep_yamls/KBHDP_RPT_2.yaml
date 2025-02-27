@@ -47,7 +47,7 @@ KBHDP_RPT_2_frac_heat_from_grid_sweep:
       param: fs.costing.frac_heat_from_grid
       lower_limit: 0
       upper_limit: 1
-      num_samples: 11
+      num_samples: 21
 # KBHDP_RPT_2_heat_price_sweep:
 #   build_defaults:
 #     heat_price: 0.01

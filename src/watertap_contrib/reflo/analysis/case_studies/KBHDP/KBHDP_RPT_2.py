@@ -73,7 +73,7 @@ def main():
         m,
         water_recovery=0.45,
         # heat_price=0.01,
-        grid_frac_heat=0.9,
+        grid_frac_heat=0.5,
     )
     solve(m, debug=True)
 
@@ -699,14 +699,14 @@ def optimize(
 
     if heat_price is not None:
         energy.FPC.heat_load.unfix()
-        energy.FPC.hours_storage.unfix()
+        # energy.FPC.hours_storage.unfix()
         m.fs.costing.frac_heat_from_grid.unfix()
         m.fs.costing.heat_cost_buy.fix(heat_price)
 
     # BUG This is an issue
     if grid_frac_heat is not None:
         energy.FPC.heat_load.unfix()
-        energy.FPC.hours_storage.fix(18)
+        # energy.FPC.hours_storage.fix(18)
         m.fs.costing.frac_heat_from_grid.fix(grid_frac_heat)
 
     print(f"Degrees of Feedom @ Optimization: {degrees_of_freedom(m)}")

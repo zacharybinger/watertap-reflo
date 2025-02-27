@@ -24,18 +24,18 @@ def run_case_sweep(case, case_name=None, yaml_file=None):
 
     save_name = case_name
 
-    for root, dirs, files in os.walk(os.path.join(save_dir, "output")):
-        for file in files:
-            file_id = file.split("_")
-            case_id = case_name.split("_")
-            if file_id[:3] == case_id[:3]:
-                timestr = time.strftime("%Y%m%d-%H%M%S")
-                print("Moving Prior Data to Archive")
-                original_file = os.path.join(save_dir, "output", file)
-                archive_file = os.path.join(
-                    save_dir, "archive", file[:-3] + "_" + timestr + file[-3:]
-                )
-                os.rename(original_file, archive_file)
+    # for root, dirs, files in os.walk(os.path.join(save_dir, "output")):
+    #     for file in files:
+    #         file_id = file.split("_")
+    #         case_id = case_name.split("_")
+    #         if file_id[:3] == case_id[:3]:
+    #             timestr = time.strftime("%Y%m%d-%H%M%S")
+    #             print("Moving Prior Data to Archive")
+    #             original_file = os.path.join(save_dir, "output", file)
+    #             archive_file = os.path.join(
+    #                 save_dir, "archive", file[:-3] + "_" + timestr + file[-3:]
+    #             )
+    #             os.rename(original_file, archive_file)
 
     lT = loopTool(
         map_yaml_file,
@@ -63,8 +63,8 @@ def run_all_cases():
     cases = [
         # {"case": SOA, "case_name": "KBHDP_SOA_1", "yaml_file": "KBHDP_SOA_1.yaml"},
         # {"case": SOA, "case_name": "KBHDP_SOA_1", "yaml_file": "KBHDP_SOA_1_diff.yaml"},
-        {"case": RPT1, "case_name": "KBHDP_RPT_1", "yaml_file": "KBHDP_RPT_1.yaml"},
-        # {"case": RPT2, "case_name": "KBHDP_RPT_2", "yaml_file": "KBHDP_RPT_2.yaml"},
+        # {"case": RPT1, "case_name": "KBHDP_RPT_1", "yaml_file": "KBHDP_RPT_1.yaml"},
+        {"case": RPT2, "case_name": "KBHDP_RPT_2", "yaml_file": "KBHDP_RPT_2.yaml"},
     ]
 
     for case in cases:

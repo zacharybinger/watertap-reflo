@@ -513,7 +513,9 @@ def add_ro_scaling(m, blk):
             )
             set_scaling_factor(module.feed_side.properties[e].dens_mass_phase["Liq"], 1)
             # set_scaling_factor(module.feed_side.properties[e].dens_mass_phase["Liq"], 1e3)
-            set_scaling_factor(module.feed_side.properties[e].mass_frac_phase_comp["Liq", "NaCl"], 1e1)
+            set_scaling_factor(
+                module.feed_side.properties[e].mass_frac_phase_comp["Liq", "NaCl"], 1e1
+            )
 
         for temp_stream in [
             module.eq_permeate_isothermal,
