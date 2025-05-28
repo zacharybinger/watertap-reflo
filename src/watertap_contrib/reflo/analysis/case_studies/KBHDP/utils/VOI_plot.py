@@ -1,9 +1,16 @@
 import os
-from analysis_generic_modules.plot_kit.analysis_plot_kit.core import (
-    fig_generator,
+# from analysis_generic_modules.plot_kit.analysis_plot_kit.core import (
+#     fig_generator,
+#     data_import,
+#     data_collator,
+# )
+
+from analysis_plot_kit.core import (
+    # fig_generator,
     data_import,
-    data_collator,
+    # data_collator,
 )
+
 import pandas as pd
 import seaborn as sns
 import matplotlib
